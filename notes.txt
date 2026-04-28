@@ -1,0 +1,7 @@
+base url = https://www.linkedin.com/jobs/search/?keywords=software%20engineer&f_TPR=r86400&f_AL=true&sortBy=DD
+
+%20= space
+f_TPR = Time Posted Range
+r86400 = 86400 seconds = 24 hours
+f_AL=true
+AL = Apply on LinkedIn (Easy Apply)
