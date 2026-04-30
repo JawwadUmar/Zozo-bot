@@ -3,10 +3,13 @@ from app.config.config import PHONE_NUMBER
 
 async def fillForm(page):
     await fillPhoneNumber(page)
-    await clickNextButton(page)
+    await clickNextOrReviewButton(page)
     await handleResumePage(page)
+    await clickNextOrReviewButton(page)
     await handleAdditionalQuestions(page)
-    await clickReviewButton(page)
+    await clickNextOrReviewButton(page)
+    await handleWorkAuthorization(page)
+    await clickNextOrReviewButton(page)
     await clickSubmitButton(page)
 
 async def fillPhoneNumber(page):
@@ -43,39 +46,79 @@ async def handleResumePage(page):
         resume_text = page.locator("span:has-text('Be sure to include an updated resume')").first
         await resume_text.wait_for(state="visible", timeout=3000)
         print("🤖 Zozo: 'Resume' section found. Resume already attached, clicking Next...")
-        await clickNextButton(page)
     except Exception:
         print("🤖 Zozo: 'Resume' section not found right now.")
 
-async def clickNextButton(page):
-    print("🤖 Zozo: Checking for 'Next' button...")
+async def handleWorkAuthorization(page):
+    print("🤖 Zozo: Checking for 'Work authorization' section...")
     try:
-        # Locate the button using the aria-label from the HTML snippet
-        next_button = page.locator("button[aria-label='Continue to next step']:visible").first
+        # Check if the header exists
+        header = page.locator("h3:has-text('Work authorization')").first
+        await header.wait_for(state="visible", timeout=3000)
+        print("🤖 Zozo: 'Work authorization' section found. Filling answers...")
         
-        await next_button.wait_for(state="visible", timeout=3000)
+        # Handle Radio Buttons (Fieldsets)
+        fieldsets = page.locator("fieldset[data-test-form-builder-radio-button-form-component='true']")
+        fs_count = await fieldsets.count()
+        for i in range(fs_count):
+            fs_el = fieldsets.nth(i)
+            if await fs_el.is_visible():
+                # Extract question text
+                title_el = fs_el.locator("span[data-test-form-builder-radio-button-form-component__title]")
+                question_text = "Unknown Radio Question"
+                if await title_el.count() > 0:
+                    question_text = await title_el.first.inner_text()
+                    question_text = " ".join(question_text.split())
+                
+                print(f"\n🤖 Zozo detected question: {question_text}")
+                
+                # Extract options
+                options_loc = fs_el.locator("label[data-test-text-selectable-option__label]")
+                options_count = await options_loc.count()
+                
+                available_options = []
+                for j in range(options_count):
+                    opt_text = await options_loc.nth(j).inner_text()
+                    if opt_text.strip():
+                        available_options.append(opt_text.strip())
+                
+                print(f"   Options: {available_options}")
+                
+                # Select the 'Yes' option or first option
+                if options_count > 0:
+                    yes_option = fs_el.locator("label:has-text('Yes')").first
+                    if await yes_option.count() > 0:
+                        await yes_option.click()
+                        print(f"✅ Zozo answer: Yes")
+                    else:
+                        first_option_label = options_loc.first
+                        await first_option_label.click()
+                        answer_text = available_options[0] if available_options else "First Option"
+                        print(f"✅ Zozo answer: {answer_text}")
+                    await human_delay(0.5, 1.5)
+                    
+        print("\n✅ Zozo: Finished filling work authorization.")
         
-        await human_delay(1, 3)
-        await next_button.click()
-        print("✅ Zozo: Clicked the 'Next' button.")
+        
         
     except Exception as e:
-        print("🤖 Zozo: 'Next' button not found right now. We might be on a different step.")
+        print("🤖 Zozo: 'Work authorization' section not found right now.")
 
-async def clickReviewButton(page):
-    print("🤖 Zozo: Checking for 'Review' button...")
+async def clickNextOrReviewButton(page):
+    print("🤖 Zozo: Checking for 'Next' or 'Review' button...")
     try:
-        # Locate the button using the aria-label from the HTML snippet
-        review_button = page.locator("button[aria-label='Review your application']:visible").first
+        # Use a comma-separated locator to find either the Next or Review button, whichever is visible
+        button = page.locator("button[aria-label='Continue to next step']:visible, button[aria-label='Review your application']:visible").first
         
-        await review_button.wait_for(state="visible", timeout=3000)
+        await button.wait_for(state="visible", timeout=3000)
         
+        btn_text = await button.inner_text()
         await human_delay(1, 3)
-        await review_button.click()
-        print("✅ Zozo: Clicked the 'Review' button.")
+        await button.click()
+        print(f"✅ Zozo: Clicked the '{btn_text.strip()}' button.")
         
     except Exception as e:
-        print("🤖 Zozo: 'Review' button not found right now.")
+        print("🤖 Zozo: Neither 'Next' nor 'Review' button found right now.")
 
 async def clickSubmitButton(page):
     print("🤖 Zozo: Checking for 'Submit application' button...")
@@ -219,3 +262,34 @@ async def handleAdditionalQuestions(page):
         
     except Exception as e:
         print("🤖 Zozo: 'Additional Questions' section not found right now.")
+
+
+async def clickReviewButton(page):
+    print("🤖 Zozo: Checking for 'Review' button...")
+    try:
+        # Locate the button using the aria-label from the HTML snippet
+        review_button = page.locator("button[aria-label='Review your application']:visible").first
+        
+        await review_button.wait_for(state="visible", timeout=3000)
+        
+        await human_delay(1, 3)
+        await review_button.click()
+        print("✅ Zozo: Clicked the 'Review' button.")
+        
+    except Exception as e:
+        print("🤖 Zozo: 'Review' button not found right now.")
+
+async def clickNextButton(page):
+    print("🤖 Zozo: Checking for 'Next' button...")
+    try:
+        # Locate the button using the aria-label from the HTML snippet
+        next_button = page.locator("button[aria-label='Continue to next step']:visible").first
+        
+        await next_button.wait_for(state="visible", timeout=3000)
+        
+        await human_delay(1, 3)
+        await next_button.click()
+        print("✅ Zozo: Clicked the 'Next' button.")
+        
+    except Exception as e:
+        print("🤖 Zozo: 'Next' button not found right now. We might be on a different step.")
