@@ -1,7 +1,14 @@
 base url = https://www.linkedin.com/jobs/search/?keywords=software%20engineer&f_TPR=r86400&f_AL=true&sortBy=DD
 
+base url = https://www.linkedin.com/jobs/search/?f_AL=true&f_TPR=r86400&f_WT=2&keywords=social%20media%20manager&sortBy=DD
+
 %20= space
 f_TPR = Time Posted Range
 r86400 = 86400 seconds = 24 hours
 f_AL=true
 AL = Apply on LinkedIn (Easy Apply)
+
+=====================
+I want to open the base url and provide the above link 
+and hit on button with the id and class 
+id="jobs-apply-button-id"
