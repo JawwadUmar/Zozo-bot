@@ -36,8 +36,8 @@ async def run():
         await page.wait_for_load_state("domcontentloaded")
 
         # Better selectors
-        username = page.get_by_label("Email or phone")
-        password = page.get_by_label("Password")
+        username = page.get_by_label("Email or phone", exact=True).locator("visible=true")
+        password = page.get_by_label("Password", exact=True).locator("visible=true")
 
         await username.click()
         await human_typing(username, "your_email")
