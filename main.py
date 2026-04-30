@@ -59,6 +59,6 @@ async def run():
         await submitButton.click()
         await human_delay(6, 10)
 
-        await browser.close()
-
+        print("Login complete. Press Ctrl+C in the terminal to close the browser.")
+        await asyncio.Event().wait()
 asyncio.run(run())
