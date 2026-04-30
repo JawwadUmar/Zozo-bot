@@ -5,6 +5,7 @@ from app.config.config import EMAIL, PASSWORD, JOBLINK
 from app.bot.handle_login import handleLogin
 from app.utils.human import human_delay
 from app.bot.click_easy_apply import clickEasyApply
+from app.bot.fill_form import fillPhoneNumber
 
 
 async def run():
@@ -19,6 +20,7 @@ async def run():
         await page.goto(JOBLINK, wait_until="load")
         
         await clickEasyApply(page)
+        await fillPhoneNumber(page)
         
         await asyncio.Event().wait()
 asyncio.run(run())
