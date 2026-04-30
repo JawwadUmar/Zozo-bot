@@ -2,6 +2,7 @@ import asyncio
 import random
 from playwright.async_api import async_playwright
 from app.config.config import EMAIL, PASSWORD
+from app.bot.handle_login import handleLogin
 
 async def human_typing(element, text):
     for char in text:
@@ -23,42 +24,6 @@ async def run():
         browser = await p.chromium.launch(headless=False)
         page = await browser.new_page()
 
-        await page.goto("https://www.linkedin.com/login")
-
-        # ✅ Target elements
-        # username = page.locator("#username")
-        # password = page.locator("#password")
-
-        # # Optional: click first to focus
-        # await username.click()
-        # await human_typing(username, "your_email_here")
-
-        # await password.click()
-        # await human_typing(password, "your_password_here")
-
-        # # Click login
-        # page.get_by_role("button", name="Sign in", exact=True).click()
-
-        # await asyncio.sleep(5)
-        await page.goto("https://www.linkedin.com/login")
-
-        # Wait properly
-        await page.wait_for_load_state("domcontentloaded")
-
-        # Better selectors
-        username = page.get_by_label("Email or phone", exact=True).locator("visible=true").first
-        password = page.get_by_label("Password", exact=True).locator("visible=true").first
-
-        await username.click()
-        await human_typing(username, EMAIL)
-
-        await password.click()
-        await human_typing(password, PASSWORD)
-
-        submitButton = page.get_by_role("button", name="Sign in", exact=True).locator("visible=true").first
-        await submitButton.click()
-        await human_delay(6, 10)
-
-        print("Login complete. Press Ctrl+C in the terminal to close the browser.")
+        await handleLogin(page)
         await asyncio.Event().wait()
 asyncio.run(run())
