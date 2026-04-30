@@ -48,16 +48,18 @@ async def run():
                 success = await clickEasyApply(page)
                 if success:
                     await fillForm(page)
+                    await human_delay(10,15)
                     
                     # After applying, click dismiss on the success modal
                     print("🤖 Zozo: Closing success modal...")
                     try:
-                        dismiss_btn = page.locator("button[aria-label='Dismiss']").first
+                        # Find the dismiss button by data attribute, aria-label, class, or its inner SVG icon
+                        dismiss_btn = page.locator("button[data-test-modal-close-btn]:visible, button[aria-label='Dismiss']:visible, button.artdeco-modal__dismiss:visible, button:has(svg[data-test-icon='close-medium']):visible").first
                         await dismiss_btn.wait_for(state="visible", timeout=5000)
-                        await dismiss_btn.click()
+                        await dismiss_btn.click(force=True)
                         await human_delay(1, 2)
-                    except Exception:
-                        print("⚠️ Zozo: Dismiss button not found.")
+                    except Exception as e:
+                        print(f"⚠️ Zozo: Dismiss button not found or could not be clicked. (Log: {e})")
         else:
             # Single job page fallback
             success = await clickEasyApply(page)
