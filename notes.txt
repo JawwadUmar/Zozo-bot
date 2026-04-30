@@ -12,3 +12,40 @@ AL = Apply on LinkedIn (Easy Apply)
 I want to open the base url and provide the above link 
 and hit on button with the id and class 
 id="jobs-apply-button-id"
+
+=================
+types of page:
+Additional Question
+<h3 class="t-16 t-bold">
+          Additional Questions
+        </h3>
+
+<label for="single-line-text-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236300-numeric" class="artdeco-text-input--label">How many years of work experience do you have with Embedded C?</label>
+
+<input inputmode="text" class=" artdeco-text-input--input" id="single-line-text-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236300-numeric" required="" aria-describedby="single-line-text-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236300-numeric-error" dir="auto" type="text">
+
+<label for="single-line-text-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236788-numeric" class="artdeco-text-input--label">Total yrs of exp</label>
+
+<input inputmode="text" class=" artdeco-text-input--input" id="single-line-text-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236788-numeric" required="" aria-describedby="single-line-text-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236788-numeric-error" dir="auto" type="text">
+
+<label for="text-entity-list-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236748-multipleChoice" class="fb-dash-form-element__label
+        fb-dash-form-element__label-title--is-required" data-test-text-entity-list-form-title="">
+      <span aria-hidden="true"><!---->Are you in Chennai ?<!----></span><span class="visually-hidden"><!---->Are you in Chennai ?<!----></span>
+    </label>
+
+<select id="text-entity-list-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236748-multipleChoice" class="fb-dash-form-element__select-dropdown
+      " aria-describedby="text-entity-list-form-component-formElement-urn-li-jobs-applyformcommon-easyApplyFormElement-4407330966-29721236748-multipleChoice-error" aria-required="true" required="" data-test-text-entity-list-form-select="">
+      <option value="Select an option">
+        Select an option
+      </option>
+      <option value="Yes">
+        Yes
+      </option>
+      <option value="No">
+        No
+      </option>
+  </select>
+
+  <span class="artdeco-button__text">
+    Review
+</span>

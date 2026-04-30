@@ -27,3 +27,18 @@ async def fillPhoneNumber(page):
     except Exception as e:
         # If it doesn't appear or times out, it's fine, we just move on
         print("🤖 Zozo: Phone number field not found or not required right now.")
+
+async def clickNextButton(page):
+    print("🤖 Zozo: Checking for 'Next' button...")
+    try:
+        # Locate the button using the aria-label from the HTML snippet
+        next_button = page.locator("button[aria-label='Continue to next step']:visible").first
+        
+        await next_button.wait_for(state="visible", timeout=3000)
+        
+        await human_delay(1, 3)
+        await next_button.click()
+        print("✅ Zozo: Clicked the 'Next' button.")
+        
+    except Exception as e:
+        print("🤖 Zozo: 'Next' button not found right now. We might be on a different step.")
