@@ -18,9 +18,52 @@ async def run():
         print("🤖 Zozo: Navigating to Jobs...")
         await page.goto(JOBLINK, wait_until="load")
         
-        await clickEasyApply(page)
+        # Check if we are on a search page with multiple job cards
+        try:
+            await page.wait_for_selector(".job-card-container", timeout=5000)
+            is_search_page = True
+        except Exception:
+            is_search_page = False
+            
+        if is_search_page:
+            job_cards = page.locator(".job-card-container")
+            count = await job_cards.count()
+            print(f"🤖 Zozo: Found {count} jobs on this page.")
+            
+            for i in range(count):
+                card = job_cards.nth(i)
+                await card.scroll_into_view_if_needed()
+                await human_delay(1, 2)
+                
+                # Check if already applied
+                applied_text = card.locator("li:has-text('Applied')")
+                if await applied_text.count() > 0:
+                    print(f"🤖 Zozo: Skipping job {i+1} because it is already 'Applied'.")
+                    continue
+                    
+                print(f"🤖 Zozo: Selecting job {i+1}...")
+                await card.click()
+                await human_delay(2, 4)
+                
+                success = await clickEasyApply(page)
+                if success:
+                    await fillForm(page)
+                    
+                    # After applying, click dismiss on the success modal
+                    print("🤖 Zozo: Closing success modal...")
+                    try:
+                        dismiss_btn = page.locator("button[aria-label='Dismiss']").first
+                        await dismiss_btn.wait_for(state="visible", timeout=5000)
+                        await dismiss_btn.click()
+                        await human_delay(1, 2)
+                    except Exception:
+                        print("⚠️ Zozo: Dismiss button not found.")
+        else:
+            # Single job page fallback
+            success = await clickEasyApply(page)
+            if success:
+                await fillForm(page)
         
-        await fillForm(page)
-        
+        print("🤖 Zozo: All done with current jobs!")
         await asyncio.Event().wait()
 asyncio.run(run())

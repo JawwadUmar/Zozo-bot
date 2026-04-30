@@ -14,7 +14,7 @@ async def clickEasyApply(page):
         
     except Exception as e:
         print(f"⚠️ Zozo: Could not find or click the Easy Apply button: {e}")
-        return
+        return False
         
     # Wait to see if the "Continue applying" warning modal pops up
     try:
@@ -30,3 +30,4 @@ async def clickEasyApply(page):
         pass
     
     await human_delay(3, 6)
+    return True
