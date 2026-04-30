@@ -49,3 +49,16 @@ Additional Question
   <span class="artdeco-button__text">
     Review
 </span>
+
+=========================
+If am on the resume page:
+I will detect the following:
+
+<span class="t-14
+          jobs-document-upload__title--is-required">
+          Be sure to include an updated resume
+      </span>
+
+Just click on next button because my resume already attached. 
+===========================================
+

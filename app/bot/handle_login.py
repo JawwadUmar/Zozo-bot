@@ -19,7 +19,13 @@ async def handleLogin(page: Page):
     await password.click()
     await human_typing(password, PASSWORD)
     await submitButton.click()
-    await human_delay()
-
-    print("Login complete. Press Ctrl+C in the terminal to close the browser.")
- 
+    
+    print("🤖 Zozo: Waiting for login to complete (please solve 2FA if prompted)...")
+    try:
+        # Wait up to 2 minutes for the URL to change to the LinkedIn feed, confirming login is successful
+        await page.wait_for_url("**/feed/**", timeout=120000)
+        print("✅ Zozo: Login confirmed!")
+    except Exception as e:
+        print("⚠️ Zozo: Login timed out or failed. Check the browser.")
+        
+    await human_delay(2, 4)
