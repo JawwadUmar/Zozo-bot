@@ -60,5 +60,22 @@ I will detect the following:
       </span>
 
 Just click on next button because my resume already attached. 
+
+<p class="_434ce929 b25e2015 e35464a3 b09fdb5e _0e137186 _55de6063 cbf2dcd0 _220941f4 _8a9690a9">Mahwish Mallick</p>
 ===========================================
 
+Review your application page:
+
+first uncheck it, don't follow the company 
+
+<label for="follow-company-checkbox" class="t-14 t-black--light">
+            Follow <span class="t-bold t-black">Seceon Inc.</span> to stay up to date with their page.
+          </label>
+
+          click on Submit application
+
+          <button aria-label="Submit application" id="ember1362" class="artdeco-button artdeco-button--2 artdeco-button--primary ember-view" data-live-test-easy-apply-submit-button="" type="button"><!---->
+<span class="artdeco-button__text">
+    Submit application
+</span></button>
+==================

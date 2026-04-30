@@ -6,6 +6,8 @@ async def fillForm(page):
     await clickNextButton(page)
     await handleResumePage(page)
     await handleAdditionalQuestions(page)
+    await clickReviewButton(page)
+    await clickSubmitButton(page)
 
 async def fillPhoneNumber(page):
     if not PHONE_NUMBER:
@@ -59,6 +61,49 @@ async def clickNextButton(page):
         
     except Exception as e:
         print("🤖 Zozo: 'Next' button not found right now. We might be on a different step.")
+
+async def clickReviewButton(page):
+    print("🤖 Zozo: Checking for 'Review' button...")
+    try:
+        # Locate the button using the aria-label from the HTML snippet
+        review_button = page.locator("button[aria-label='Review your application']:visible").first
+        
+        await review_button.wait_for(state="visible", timeout=3000)
+        
+        await human_delay(1, 3)
+        await review_button.click()
+        print("✅ Zozo: Clicked the 'Review' button.")
+        
+    except Exception as e:
+        print("🤖 Zozo: 'Review' button not found right now.")
+
+async def clickSubmitButton(page):
+    print("🤖 Zozo: Checking for 'Submit application' button...")
+    try:
+        # Locate the Submit application button by aria-label from the user's snippet
+        submit_button = page.locator("button[aria-label='Submit application']:visible").first
+        await submit_button.wait_for(state="visible", timeout=3000)
+        
+        # Uncheck "Follow company" if it exists and is checked
+        follow_checkbox = page.locator("input#follow-company-checkbox")
+        if await follow_checkbox.count() > 0 and await follow_checkbox.first.is_visible():
+            is_checked = await follow_checkbox.first.is_checked()
+            if is_checked:
+                print("🤖 Zozo: Unchecking 'Follow company'...")
+                # Best practice is to click its label since the actual checkbox input may be hidden
+                follow_label = page.locator("label[for='follow-company-checkbox']").first
+                if await follow_label.count() > 0:
+                    await follow_label.click()
+                else:
+                    await follow_checkbox.first.click()
+                await human_delay(0.5, 1.0)
+                
+        await human_delay(1, 3)
+        await submit_button.click()
+        print("✅ Zozo: Clicked the 'Submit application' button. Application Sent!")
+        
+    except Exception as e:
+        print("🤖 Zozo: 'Submit application' button not found right now.")
 
 async def handleAdditionalQuestions(page):
     print("🤖 Zozo: Checking for 'Additional Questions' section...")
@@ -135,6 +180,39 @@ async def handleAdditionalQuestions(page):
                     await select_el.select_option(index=1)
                     answer_text = await options_loc.nth(1).inner_text()
                     print(f"✅ Zozo answer: {answer_text.strip()}")
+        # 3. Handle Radio Buttons (Fieldsets)
+        fieldsets = page.locator("fieldset[data-test-form-builder-radio-button-form-component='true']")
+        fs_count = await fieldsets.count()
+        for i in range(fs_count):
+            fs_el = fieldsets.nth(i)
+            if await fs_el.is_visible():
+                # Extract question text
+                title_el = fs_el.locator("span[data-test-form-builder-radio-button-form-component__title]")
+                question_text = "Unknown Radio Question"
+                if await title_el.count() > 0:
+                    question_text = await title_el.first.inner_text()
+                    question_text = " ".join(question_text.split())
+                
+                print(f"\n🤖 Zozo detected question: {question_text}")
+                
+                # Extract options
+                options_loc = fs_el.locator("label[data-test-text-selectable-option__label]")
+                options_count = await options_loc.count()
+                
+                available_options = []
+                for j in range(options_count):
+                    opt_text = await options_loc.nth(j).inner_text()
+                    if opt_text.strip():
+                        available_options.append(opt_text.strip())
+                
+                print(f"   Options: {available_options}")
+                
+                # Select the first option
+                if options_count > 0:
+                    first_option_label = options_loc.first
+                    await first_option_label.click()
+                    answer_text = available_options[0] if available_options else "First Option"
+                    print(f"✅ Zozo answer: {answer_text}")
                     await human_delay(0.5, 1.5)
                     
         print("\n✅ Zozo: Finished filling additional questions.")
