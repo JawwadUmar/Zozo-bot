@@ -18,10 +18,8 @@ async def handleLogin(page: Page):
 
     await password.click()
     await human_typing(password, PASSWORD)
-
-    
     await submitButton.click()
-    await human_delay(6, 10)
+    await human_delay()
 
     print("Login complete. Press Ctrl+C in the terminal to close the browser.")
  
