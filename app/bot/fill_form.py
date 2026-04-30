@@ -3,11 +3,59 @@ from app.config.config import PHONE_NUMBER
 from app.bot.click_buttons import clickNextOrReviewButton, clickSubmitButton, clickNextButton
 
 async def fillForm(page):
-    await fillPhoneNumber(page)
-    await handleResumePage(page)
-    await handleAdditionalQuestions(page)
-    await handleWorkAuthorization(page)
-    await clickSubmitButton(page)
+    print("🤖 Zozo: Starting dynamic form filling...")
+    max_steps = 15 # safety limit to prevent infinite loops
+    
+    for step in range(max_steps):
+        print(f"\n--- Form Step {step+1} ---")
+        await human_delay(1, 2)
+        
+        # 1. Check if we are on the final Review page with a Submit button
+        submit_btn = page.locator("button[aria-label='Submit application']:visible")
+        if await submit_btn.count() > 0:
+            print("🤖 Zozo: 'Submit' button found. Attempting to submit...")
+            await clickSubmitButton(page)
+            return  # Successfully applied!
+            
+        # 2. Check for Phone Number section
+        phone_input = page.locator('input[id$="-phoneNumber-nationalNumber"]:visible')
+        if await phone_input.count() > 0:
+            await fillPhoneNumber(page)
+            continue
+            
+        # 3. Check for Resume section
+        resume_text = page.locator("span:has-text('Be sure to include an updated resume'):visible")
+        if await resume_text.count() > 0:
+            await handleResumePage(page)
+            continue
+            
+        # 4. Check for Additional Questions
+        add_q_header = page.locator("h3:has-text('Additional Questions'):visible")
+        if await add_q_header.count() > 0:
+            await handleAdditionalQuestions(page)
+            continue
+            
+        # 5. Check for Work Authorization
+        work_auth_header = page.locator("h3:has-text('Work authorization'):visible")
+        if await work_auth_header.count() > 0:
+            await handleWorkAuthorization(page)
+            continue
+            
+        # 6. Fallback: If it's a page we don't explicitly handle, just try to click Next or Review
+        print("🤖 Zozo: Unknown section or nothing to fill. Trying to click Next/Review...")
+        try:
+            # Check if there's actually a next/review button
+            btn = page.locator("button[aria-label='Continue to next step']:visible, button[aria-label='Review your application']:visible")
+            if await btn.count() > 0:
+                await clickNextOrReviewButton(page)
+            else:
+                print("⚠️ Zozo: Stuck on form. No Next/Review/Submit buttons visible.")
+                break
+        except Exception as e:
+            print(f"⚠️ Zozo: Error proceeding: {e}")
+            break
+            
+    print("⚠️ Zozo: Form filling ended (max steps reached or got stuck).")
 
 async def fillPhoneNumber(page):
     if not PHONE_NUMBER:
