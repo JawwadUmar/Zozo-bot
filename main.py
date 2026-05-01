@@ -3,11 +3,8 @@ from app.ai.llm import init_llm
 import asyncio
 
 async def main():
-    llm = init_llm()
-    if not llm:
-        print("❌ AI Initialization Failed. Exiting...")
-        return
-    await run_bot(llm)
+    
+    await run_bot()
 
 if __name__ == "__main__":
     asyncio.run(main())
