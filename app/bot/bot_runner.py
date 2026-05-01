@@ -7,7 +7,7 @@ from app.utils.human import human_delay
 from app.bot.click_easy_apply import clickEasyApply
 from app.bot.fill_form import fillForm
 
-async def run():
+async def run_bot(llm):
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
         page = await browser.new_page()
@@ -68,4 +68,3 @@ async def run():
         
         print("🤖 Zozo: All done with current jobs!")
         await asyncio.Event().wait()
-asyncio.run(run())
