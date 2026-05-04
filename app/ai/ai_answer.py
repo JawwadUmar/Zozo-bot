@@ -10,7 +10,7 @@ human_prompt = get_human_prompt()
 
 
 
-async def getAiAnswer(available_options:list[str], question: str)->str|Any:
+async def getAiAnswer(available_options:list[str]|None, question: str, isNumeric: bool=False)->str|Any:
     prompt_template = ChatPromptTemplate.from_messages([
                 ("system", system_prompt),
                 ("human", human_prompt)
@@ -19,7 +19,8 @@ async def getAiAnswer(available_options:list[str], question: str)->str|Any:
     prompt = prompt_template.format_messages(
         resume=resume if should_include_resume(question) else "N/A",
         options=available_options,
-        question=question
+        question=question,
+        isNumeric=isNumeric
     )
     raw_response = await llm.ainvoke(prompt)
     answer = raw_response.content.strip().replace("**", "")

@@ -187,14 +187,16 @@ async def handleAdditionalQuestions(page):
                     
                     if "numeric" in input_id.lower():
                         # Integer required
+                        answer = await getAiAnswer(None, question_text, True)
                         await input_el.click()
-                        await human_typing(input_el, "1")
-                        print("✅ Zozo answer: 1")
+                        await human_typing(input_el, answer)
+                        print(f"✅ Zozo answer: {answer}")
                     else:
                         # Random text value
+                        answer = await getAiAnswer(None, question_text, False)
                         await input_el.click()
-                        await human_typing(input_el, "val")
-                        print("✅ Zozo answer: val")
+                        await human_typing(input_el, answer)
+                        print(f"✅ Zozo answer: {answer}")
         
         # 2. Handle Select Dropdowns
         selects = page.locator("select.fb-dash-form-element__select-dropdown")
@@ -228,9 +230,12 @@ async def handleAdditionalQuestions(page):
                 
                 # We want to select the first valid option (index 1). 
                 if options_count > 1:
+                    await select_el.click()
+                    # answer = await getAiAnswer(available_options, question_text, False)
+                    # await select_el.select_option(answer)
                     await select_el.select_option(index=1)
                     answer_text = await options_loc.nth(1).inner_text()
-                    print(f"✅ Zozo answer: {answer_text.strip()}")
+                    print(f"✅ Zozo answer: {answer_text}")
         # 3. Handle Radio Buttons (Fieldsets)
         fieldsets = page.locator("fieldset[data-test-form-builder-radio-button-form-component='true']")
         fs_count = await fieldsets.count()

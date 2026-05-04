@@ -16,7 +16,7 @@ async def run_bot():
         await handleLogin(page)
 
         print("🤖 Zozo: Navigating to Jobs...")
-        await page.goto(JOBLINK, wait_until="load")
+        await page.goto(JOBLINK, wait_until="load", timeout=300000)
         
         # Check if we are on a search page with multiple job cards
         try:

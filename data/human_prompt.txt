@@ -8,3 +8,8 @@ Options:
 
 Question:
 {question}
+
+isNumeric:
+{isNumeric}
+
+If isNumeric is True, return only the number, otherwise return the answer.
