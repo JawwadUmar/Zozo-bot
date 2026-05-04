@@ -1,7 +1,6 @@
 from langchain_groq import ChatGroq
-from langchain_core.globals import set_llm_cache
 
-def init_llm():
+def init_llm()->ChatGroq|None:
     try:    
         local_llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.3)
         return local_llm
