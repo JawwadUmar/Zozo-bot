@@ -1,6 +1,7 @@
 from app.utils.human import human_delay, human_typing
 from app.config.config import PHONE_NUMBER
 from app.bot.click_buttons import clickNextOrReviewButton, clickSubmitButton, clickNextButton
+from app.ai.ai_answer import getAiAnswer
 
 async def fillForm(page):
     print("🤖 Zozo: Starting dynamic form filling...")
