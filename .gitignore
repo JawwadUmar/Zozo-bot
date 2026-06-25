@@ -2,3 +2,4 @@
 pages/
 .env
 __pycache__/
+venv
