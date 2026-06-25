@@ -1,5 +1,4 @@
 from app.bot.bot_runner import run_bot
-from app.ai.llm import init_llm
 import asyncio
 
 async def main():
