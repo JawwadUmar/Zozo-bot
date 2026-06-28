@@ -34,40 +34,53 @@ async def run_bot():
                 is_search_page = False
                 
             if is_search_page:
+                await human_delay(2, 4) # Give React a moment to finish rendering the list
                 job_cards = page.locator(".job-card-container")
                 count = await job_cards.count()
                 print(f"🤖 Zozo: Found {count} jobs on this page.")
                 
                 for i in range(count):
-                    card = job_cards.nth(i)
-                    await card.scroll_into_view_if_needed()
-                    await human_delay(1, 2)
-                    
-                    # Check if already applied
-                    applied_text = card.locator("li:has-text('Applied')")
-                    if await applied_text.count() > 0:
-                        print(f"🤖 Zozo: Skipping job {i+1} because it is already 'Applied'.")
-                        continue
+                    try:
+                        # Re-evaluate the locator in case the DOM changed
+                        job_cards = page.locator(".job-card-container")
+                        card = job_cards.nth(i)
                         
-                    print(f"🤖 Zozo: Selecting job {i+1}...")
-                    await card.click()
-                    await human_delay(2, 4)
-                    
-                    success = await clickEasyApply(page)
-                    if success:
-                        await fillForm(page)
-                        await human_delay(10,15)
+                        # Wait for the specific card to be attached and visible
+                        if await card.count() == 0:
+                            print(f"⚠️ Zozo: Job card {i+1} is no longer available in the list.")
+                            continue
+                            
+                        await card.scroll_into_view_if_needed()
+                        await human_delay(1, 2)
                         
-                        # After applying, click dismiss on the success modal
-                        print("🤖 Zozo: Closing success modal...")
-                        try:
-                            # Find the dismiss button by data attribute, aria-label, class, or its inner SVG icon
-                            dismiss_btn = page.locator("button[data-test-modal-close-btn]:visible, button[aria-label='Dismiss']:visible, button.artdeco-modal__dismiss:visible, button:has(svg[data-test-icon='close-medium']):visible").first
-                            await dismiss_btn.wait_for(state="visible", timeout=5000)
-                            await dismiss_btn.click(force=True)
-                            await human_delay(1, 2)
-                        except Exception as e:
-                            print(f"⚠️ Zozo: Dismiss button not found or could not be clicked. (Log: {e})")
+                        # Check if already applied
+                        applied_text = card.locator("li:has-text('Applied')")
+                        if await applied_text.count() > 0:
+                            print(f"🤖 Zozo: Skipping job {i+1} because it is already 'Applied'.")
+                            continue
+                            
+                        print(f"🤖 Zozo: Selecting job {i+1}...")
+                        await card.click()
+                        await human_delay(2, 4)
+                        
+                        success = await clickEasyApply(page)
+                        if success:
+                            await fillForm(page)
+                            await human_delay(10,15)
+                            
+                            # After applying, click dismiss on the success modal
+                            print("🤖 Zozo: Closing success modal...")
+                            try:
+                                # Find the dismiss button by data attribute, aria-label, class, or its inner SVG icon
+                                dismiss_btn = page.locator("button[data-test-modal-close-btn]:visible, button[aria-label='Dismiss']:visible, button.artdeco-modal__dismiss:visible, button:has(svg[data-test-icon='close-medium']):visible").first
+                                await dismiss_btn.wait_for(state="visible", timeout=5000)
+                                await dismiss_btn.click(force=True)
+                                await human_delay(1, 2)
+                            except Exception as e:
+                                print(f"⚠️ Zozo: Dismiss button not found or could not be clicked. (Log: {e})")
+                    except Exception as e:
+                        print(f"⚠️ Zozo: Error processing job {i+1}: {e}. Skipping to next job...")
+
             else:
                 # Single job page fallback
                 success = await clickEasyApply(page)
