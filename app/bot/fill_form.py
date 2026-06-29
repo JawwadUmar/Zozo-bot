@@ -18,7 +18,13 @@ async def fillForm(page):
             await clickSubmitButton(page)
             return  # Successfully applied!
             
-        # 2. Check for Phone Number section
+        # 2. Check for Contact info section
+        contact_info_header = page.locator("h3:has-text('Contact info'):visible")
+        if await contact_info_header.count() > 0:
+            await handleContactInfo(page)
+            continue
+            
+        # 2.1 Check for Phone Number section (fallback)
         phone_input = page.locator('input[id$="-phoneNumber-nationalNumber"]:visible')
         if await phone_input.count() > 0:
             await fillPhoneNumber(page)
@@ -63,6 +69,50 @@ async def fillForm(page):
             break
             
     print("⚠️ Zozo: Form filling ended (max steps reached or got stuck).")
+
+async def handleContactInfo(page):
+    print("🤖 Zozo: Checking for 'Contact info' section...")
+    try:
+        header = page.locator("h3:has-text('Contact info')").first
+        await header.wait_for(state="visible", timeout=3000)
+        print("🤖 Zozo: 'Contact info' section found. Checking fields...")
+        
+        # 1. Fill Phone Number
+        if PHONE_NUMBER:
+            phone_input = page.locator('input[id$="-phoneNumber-nationalNumber"]:visible')
+            if await phone_input.count() > 0:
+                current_value = await phone_input.first.input_value()
+                if not current_value.strip():
+                    print(f"🤖 Zozo: Phone number field is empty. Filling it with {PHONE_NUMBER}...")
+                    await phone_input.first.click()
+                    await human_typing(phone_input.first, PHONE_NUMBER)
+                    print("✅ Zozo: Filled the phone number.")
+                else:
+                    print(f"✅ Zozo: Phone number already filled with '{current_value}'.")
+        
+        # 2. Fill Location
+        location_input = page.locator('input[id$="-location-GEO-LOCATION"]:visible')
+        if await location_input.count() > 0:
+            current_value = await location_input.first.input_value()
+            if not current_value.strip():
+                print("🤖 Zozo: Location field is empty. Filling it...")
+                await location_input.first.click()
+                await human_typing(location_input.first, "Kolkata, West Bengal, India")
+                await human_delay(2, 3) # Wait for typeahead options to appear
+                
+                # Press ArrowDown and Enter to select the first option from dropdown
+                await location_input.first.press("ArrowDown")
+                await human_delay(0.5, 1)
+                await location_input.first.press("Enter")
+                print("✅ Zozo: Filled the location.")
+            else:
+                print(f"✅ Zozo: Location already filled with '{current_value}'.")
+                
+        await clickNextOrReviewButton(page)
+        
+    except Exception as e:
+        print("🤖 Zozo: 'Contact info' section not found right now.")
+
 
 async def fillPhoneNumber(page):
     if not PHONE_NUMBER:
@@ -293,7 +343,41 @@ async def handleWorkExperience(page):
         await header.wait_for(state="visible", timeout=3000)
         print("🤖 Zozo: 'Work experience' section found. Filling answers...")
         
-        # Handle Select Dropdowns
+        # 1. Handle Text Inputs
+        text_inputs = page.locator("input.artdeco-text-input--input[type='text']")
+        count = await text_inputs.count()
+        for i in range(count):
+            input_el = text_inputs.nth(i)
+            if await input_el.is_visible():
+                current_val = await input_el.input_value()
+                if not current_val.strip():
+                    input_id = await input_el.get_attribute("id") or ""
+                    
+                    # Extract question text from label
+                    question_text = "Unknown Question"
+                    if input_id:
+                        label = page.locator(f"label[for='{input_id}']")
+                        if await label.count() > 0:
+                            question_text = await label.first.inner_text()
+                    
+                    # Clean up the text (removes extra newlines/spaces)
+                    question_text = " ".join(question_text.split())
+                    print(f"\n🤖 Zozo detected question: {question_text}")
+                    
+                    if "numeric" in input_id.lower():
+                        # Integer required
+                        answer = await getAiAnswer(None, question_text, True)
+                        await input_el.click()
+                        await human_typing(input_el, answer)
+                        print(f"✅ Zozo answer: {answer}")
+                    else:
+                        # Random text value
+                        answer = await getAiAnswer(None, question_text, False)
+                        await input_el.click()
+                        await human_typing(input_el, answer)
+                        print(f"✅ Zozo answer: {answer}")
+
+        # 2. Handle Select Dropdowns
         selects = page.locator("select.fb-dash-form-element__select-dropdown")
         select_count = await selects.count()
         for i in range(select_count):
@@ -335,6 +419,41 @@ async def handleWorkExperience(page):
                         await select_el.select_option(index=1)
                         answer_text = await options_loc.nth(1).inner_text()
                         print(f"✅ Zozo fallback answer: {answer_text}")
+
+        # 3. Handle Radio Buttons (Fieldsets)
+        fieldsets = page.locator("fieldset[data-test-form-builder-radio-button-form-component='true']")
+        fs_count = await fieldsets.count()
+        for i in range(fs_count):
+            fs_el = fieldsets.nth(i)
+            if await fs_el.is_visible():
+                # Extract question text
+                title_el = fs_el.locator("span[data-test-form-builder-radio-button-form-component__title]")
+                question_text = "Unknown Radio Question"
+                if await title_el.count() > 0:
+                    question_text = await title_el.first.inner_text()
+                    question_text = " ".join(question_text.split())
+                
+                print(f"\n🤖 Zozo detected question: {question_text}")
+                
+                # Extract options
+                options_loc = fs_el.locator("label[data-test-text-selectable-option__label]")
+                options_count = await options_loc.count()
+                
+                available_options = []
+                for j in range(options_count):
+                    opt_text = await options_loc.nth(j).inner_text()
+                    if opt_text.strip():
+                        available_options.append(opt_text.strip())
+                
+                print(f"   Options: {available_options}")
+                
+                # Select the first option
+                if options_count > 0:
+                    first_option_label = options_loc.first
+                    await first_option_label.click()
+                    answer_text = available_options[0] if available_options else "First Option"
+                    print(f"✅ Zozo answer: {answer_text}")
+                    await human_delay(0.5, 1.5)
                         
         print("\n✅ Zozo: Finished filling work experience.")
         await clickNextOrReviewButton(page)
