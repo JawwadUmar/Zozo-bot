@@ -1,0 +1,164 @@
+# Harsh Jha — Resume (AI-Readable Format)
+
+This document is written in plain, simple, and specific language so that AI tools, chatbots, and ATS (Applicant Tracking Systems) can easily read it and answer questions about the candidate accurately.
+
+---
+
+## BASIC INFORMATION
+- Full Name: Harsh Jha
+- Phone Number: 7060286069
+- Email: harshptct@gmail.com
+- LinkedIn Profile: https://www.linkedin.com/in/harshjha-iiti/
+- GitHub Profile: https://github.com/harshdotcom
+- LeetCode Profile: Available https://leetcode.com/u/jhaharsh03/
+- Current Job Title: Software Development Engineer - 2 (SDE-2)
+- Total Work Experience: 4 years
+- Current Employer: SimplyFind, Indore, India
+- Current Job Duration: June 2023 to Present
+
+---
+
+## SUMMARY / PROFILE
+Harsh Jha is a Software Development Engineer with 4 years of experience. He works in backend engineering, AI-powered applications, full-stack development, cloud-native systems, and microservices. He builds scalable applications and has strong hands-on experience in Generative AI, AI agents, and LLM-based systems. He is the open-source maintainer of a project called VitaTrack.ai, which is an AI-powered healthcare platform.
+
+---
+
+## KEY SKILLS (Simple List Format)
+
+### Programming Languages
+Go, Python, C++, TypeScript, JavaScript
+
+### AI and Generative AI Skills
+- AI Agents
+- LangChain
+- LangGraph
+- LLM (Large Language Model) Integration
+- RAG Pipelines (Retrieval Augmented Generation)
+- Prompt Engineering
+- Tool Calling
+- AI Workflow Automation
+
+### Frontend Development
+Angular, React.js, RxJS, HTML, CSS
+
+### Backend Development
+FastAPI, Gin, Fiber, Node.js, Express.js, REST APIs, Microservices, gRPC, API Gateway
+
+### Databases
+PostgreSQL, MongoDB, MySQL, SQL Server, Redis
+
+### Cloud Platforms
+AWS, Azure, AWS Bedrock, AWS Textract, Oracle Cloud Infrastructure
+
+### DevOps Tools
+Docker, Kubernetes, GitHub Actions, CI/CD Pipelines, Containerized Deployment
+
+### Security Skills
+JWT Authentication, Role-Based Access Control, API Validation, Secure API Design
+
+### System Design Skills
+Clean Architecture, SOLID Principles, Distributed Systems, System Design, Event-Driven Architecture
+
+---
+
+## WORK EXPERIENCE (Detailed and Simple)
+
+### Job 1: Software Development Engineer - 2
+- Company: SimplyFind
+- Location: Indore, India
+- Duration: June 2024 to Present (Current Job)
+- What he does:
+  1. Builds backend and full-stack systems using Go, Python, Angular, TypeScript, REST APIs, PostgreSQL, and microservices.
+  2. Designs APIs for login systems, reports, financial workflows, property management, and dashboards.
+  3. Builds AI-powered backend workflows using LangChain, LangGraph, AI agents, and LLM APIs.
+  4. Uses AI to automate report generation, document understanding, and data summarization.
+  5. Deploys applications using Docker, Kubernetes, AWS, Azure, and CI/CD pipelines.
+  6. Implements security using JWT authentication and role-based access control.
+  7. Improves backend performance using clean architecture and optimized database queries.
+  8. Builds Angular-based frontend screens and dashboards.
+  9. Handles the full feature lifecycle: planning, coding, testing, deployment, and support.
+
+### Job 2: Software Developer
+- Company: Prodigal AI
+- Location: Singapore
+- Duration: January 2023 to January 2024 (1 year)
+- What he did:
+  1. Built application features using React.js, Node.js, Express.js, MongoDB, and AWS.
+  2. Worked on full MERN stack projects (MongoDB, Express, React, Node).
+  3. Built reusable UI components to improve app performance and user experience.
+  4. Connected frontend applications with backend APIs.
+  5. Supported AI-focused and data-driven application workflows.
+  6. Fixed production bugs and improved code quality.
+
+---
+
+## PROJECTS (Detailed and Simple)
+
+### Project 1: VitaTrack.ai
+- Type: Open-source AI healthcare platform
+- Technologies Used: Go, Python, Angular, PostgreSQL, LLM
+- What it does: Helps users log medical reports, symptoms, medicines, and health notes in one place.
+- Key details:
+  1. Backend APIs built using Go.
+  2. Uses PostgreSQL to store health data.
+  3. Uses AWS Textract to extract text from medical reports and prescriptions.
+  4. Uses AWS Bedrock and LLMs to summarize medical reports in simple language.
+  5. Has Angular-based screens for uploading reports and viewing health dashboards.
+
+### Project 2: AI Agent Workflow System
+- Technologies Used: Python, LangChain, LangGraph, LLM, REST APIs
+- What it does: Automates tasks using AI agents that can make decisions and take actions.
+- Key details:
+  1. Builds multi-step AI workflows for document processing and summarization.
+  2. Uses prompt templates, tool calling, and memory-based flows.
+  3. Connects AI workflows to REST APIs for automation and report generation.
+
+---
+
+## EDUCATION
+- Institute: Indian Institute of Technology (IIT) Indore
+- Location: Indore, India
+- Degree: Bachelor of Technology (B.Tech)
+
+---
+
+## CERTIFICATIONS
+- Oracle Cloud Infrastructure 2025 Certified
+
+---
+
+## ACHIEVEMENTS
+- LeetCode Contest Rating: 1663 (Top 6% globally)
+- Maintains an open-source AI healthcare software project (VitaTrack.ai)
+- Built production-grade software combining backend engineering, AI workflows, full-stack development, cloud deployment, and DevOps practices
+
+---
+
+## QUICK ANSWER SECTION (For AI Q&A Use)
+
+**Q: How many years of experience does Harsh Jha have?**
+A: 3.5 years of experience in backend engineering, AI-powered applications, and full-stack development.
+
+**Q: What is his current job?**
+A: Software Development Engineer - 2 at SimplyFind, Indore, India (since June 2024).
+
+**Q: What AI technologies does he know?**
+A: AI Agents, LangChain, LangGraph, LLM Integration, RAG Pipelines, Prompt Engineering, AWS Bedrock, and AWS Textract.
+
+**Q: What programming languages does he know?**
+A: Go, Python, C++, TypeScript, and JavaScript.
+
+**Q: What is VitaTrack.ai?**
+A: An open-source AI-powered healthcare platform he maintains, used for medical report logging and health tracking.
+
+**Q: Where did he study?**
+A: Indian Institute of Technology (IIT) Indore, Bachelor of Technology.
+
+**Q: What is his LeetCode rating?**
+A: 1663, which is in the top 6% globally.
+
+**Q: What cloud platforms does he use?**
+A: AWS, Azure, AWS Bedrock, AWS Textract, and Oracle Cloud Infrastructure.
+
+**Q: Does he have full-stack experience?**
+A: Yes. He works on frontend (Angular, React.js) and backend (Go, Python, Node.js) both.

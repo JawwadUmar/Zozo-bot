@@ -1,17 +1,38 @@
 import asyncio
 import random
 from playwright.async_api import async_playwright
-from app.config.config import JOBLINK
+from app.config.config import AUTO_CONNECT_HIRING_TEAM, JOBLINK
 from app.bot.handle_login import handleLogin
 from app.utils.human import human_delay
 from app.bot.click_easy_apply import clickEasyApply
 from app.bot.fill_form import fillForm
+from app.bot.connect_hiring_team import connect_to_hiring_team
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+
+
+async def close_success_modal(page):
+    print("Zozo: Closing success modal...")
+    try:
+        dismiss_btn = page.locator("button[data-test-modal-close-btn]:visible, button[aria-label='Dismiss']:visible, button.artdeco-modal__dismiss:visible, button:has(svg[data-test-icon='close-medium']):visible").first
+        await dismiss_btn.wait_for(state="visible", timeout=5000)
+        await dismiss_btn.click(force=True)
+        await human_delay(1, 2)
+    except Exception as e:
+        print(f"Zozo: Dismiss button not found or could not be clicked. (Log: {e})")
+
+
+async def connect_after_application(page):
+    if not AUTO_CONNECT_HIRING_TEAM:
+        print("Zozo: Hiring-team connection requests are disabled. Set AUTO_CONNECT_HIRING_TEAM=true to enable them.")
+        return
+
+    await connect_to_hiring_team(page)
 
 async def run_bot():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
-        page = await browser.new_page()
+        context = await browser.new_context()
+        page = await context.new_page()
 
         print("🤖 Zozo: Handling Login...")
         await handleLogin(page)
@@ -65,7 +86,7 @@ async def run_bot():
                         
                         success = await clickEasyApply(page)
                         if success:
-                            await fillForm(page)
+                            submitted = await fillForm(page)
                             await human_delay(10,15)
                             
                             # After applying, click dismiss on the success modal
@@ -78,6 +99,8 @@ async def run_bot():
                                 await human_delay(1, 2)
                             except Exception as e:
                                 print(f"⚠️ Zozo: Dismiss button not found or could not be clicked. (Log: {e})")
+                            if submitted:
+                                await connect_after_application(page)
                     except Exception as e:
                         print(f"⚠️ Zozo: Error processing job {i+1}: {e}. Skipping to next job...")
 
@@ -85,7 +108,10 @@ async def run_bot():
                 # Single job page fallback
                 success = await clickEasyApply(page)
                 if success:
-                    await fillForm(page)
+                    submitted = await fillForm(page)
+                    if submitted:
+                        await close_success_modal(page)
+                        await connect_after_application(page)
             
             print("🤖 Zozo: All done with current jobs!")
             start+=25
