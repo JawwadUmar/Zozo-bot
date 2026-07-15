@@ -3,7 +3,7 @@ from app.config.config import EMAIL, PASSWORD
 from app.utils.human import human_delay, human_mouse_move,human_typing
 
 async def handleLogin(page: Page):
-    await page.goto("https://www.linkedin.com/login")
+    await page.goto("https://www.linkedin.com/login/")
 
     # Wait properly
     await page.wait_for_load_state("domcontentloaded")

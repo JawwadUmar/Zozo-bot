@@ -43,9 +43,11 @@ async def clickSubmitButton(page):
         await human_delay(1, 3)
         await submit_button.click()
         print("✅ Zozo: Clicked the 'Submit application' button. Application Sent!")
+        return True
         
     except Exception as e:
         print(f"🤖 Zozo: 'Submit application' button not found right now. (Log: {e})")
+        return False
 
 # ================================Review Button =======================================
 

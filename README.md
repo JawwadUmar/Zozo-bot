@@ -169,3 +169,54 @@ This bot is intended for **personal use only** to automate repetitive job applic
 ## 📄 License
 
 MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## LinkedIn Application Tracker
+
+The first version of the job tracking workflow is intentionally manual and Markdown-based. Use `data/job_applications.md` as the single source of truth for applications, recruiter outreach, and follow-up status.
+
+### What to Track
+
+Each entry captures:
+
+- Application date
+- Company name
+- Job title
+- LinkedIn job post URL
+- Recruiter or hiring manager name, when available
+- Recruiter LinkedIn profile URL
+- Connection request status
+- Application status
+- Connection note, next action, and notes
+
+### Manual Workflow
+
+1. Apply to a job through LinkedIn.
+2. Check the job post for a recruiter, hiring manager, job poster, or "Meet the hiring team" section.
+3. If a person is listed, open their LinkedIn profile and send a connection request.
+4. Add or update the entry in `data/job_applications.md` under the application date.
+5. Update the status when the request is accepted or the application moves forward.
+
+Keep connection requests manual for now. A later automation step can extract job details after Easy Apply succeeds, but manual outreach is safer and easier to review before sending.
+
+### Expansion Plan
+
+- Step 1: Maintain the Markdown tracker manually.
+- Step 2: Add a small command-line helper to append entries to `data/job_applications.md`.
+- Step 3: Extract company, title, job URL, and hiring team details from the active LinkedIn page.
+- Step 4: Append successful Easy Apply submissions to the Markdown tracker automatically.
+- Step 5: Add reminders, filtering, or export to CSV/Notion/Sheets if the Markdown file becomes too limited.
+
+### Hiring Team Connection Requests
+
+The bot can send a LinkedIn connection request to the hiring-team profile shown in the job details after a successful Easy Apply submission. It opens the profile in a new tab so the selected job page is preserved, clicks `Connect` directly when available, or uses `More -> Connect` when LinkedIn hides the action in the menu.
+
+Add this to `.env` to enable it:
+
+```env
+AUTO_CONNECT_HIRING_TEAM="true"
+CONNECTION_NOTE_TEMPLATE="Hi {name}, I applied for the {job_title} role at {company}. I would be glad to connect and follow updates from your hiring team."
+```
+
+Keep this disabled if you want to review each profile manually before sending a request.

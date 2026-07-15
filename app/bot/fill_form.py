@@ -15,8 +15,7 @@ async def fillForm(page):
         submit_btn = page.locator("button[aria-label='Submit application']:visible")
         if await submit_btn.count() > 0:
             print("🤖 Zozo: 'Submit' button found. Attempting to submit...")
-            await clickSubmitButton(page)
-            return  # Successfully applied!
+            return await clickSubmitButton(page)
             
         # 2. Check for Contact info section
         contact_info_header = page.locator("h3:has-text('Contact info'):visible")
@@ -69,6 +68,7 @@ async def fillForm(page):
             break
             
     print("⚠️ Zozo: Form filling ended (max steps reached or got stuck).")
+    return False
 
 async def handleContactInfo(page):
     print("🤖 Zozo: Checking for 'Contact info' section...")
