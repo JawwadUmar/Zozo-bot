@@ -1,6 +1,7 @@
 from app.utils.human import human_delay, human_typing
 from app.config.config import PHONE_NUMBER
 from app.bot.click_buttons import clickNextOrReviewButton, clickSubmitButton, clickNextButton
+from app.bot.daily_limit import stop_if_daily_submission_limit_visible
 from app.ai.ai_answer import getAiAnswer
 
 async def fillForm(page):
@@ -8,14 +9,18 @@ async def fillForm(page):
     max_steps = 15 # safety limit to prevent infinite loops
     
     for step in range(max_steps):
+        await stop_if_daily_submission_limit_visible(page)
         print(f"\n--- Form Step {step+1} ---")
         await human_delay(1, 2)
+        await stop_if_daily_submission_limit_visible(page)
         
         # 1. Check if we are on the final Review page with a Submit button
         submit_btn = page.locator("button[aria-label='Submit application']:visible")
         if await submit_btn.count() > 0:
             print("🤖 Zozo: 'Submit' button found. Attempting to submit...")
-            return await clickSubmitButton(page)
+            submitted = await clickSubmitButton(page)
+            await stop_if_daily_submission_limit_visible(page)
+            return submitted
             
         # 2. Check for Contact info section
         contact_info_header = page.locator("h3:has-text('Contact info'):visible")
