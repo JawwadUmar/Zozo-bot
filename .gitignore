@@ -3,3 +3,6 @@ pages/
 .env
 __pycache__/
 venv
+data
+data/job_applications.md
+data/resume.txt
