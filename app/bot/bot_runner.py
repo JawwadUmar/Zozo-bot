@@ -9,6 +9,7 @@ from app.bot.fill_form import fillForm
 from app.bot.connect_hiring_team import connect_to_hiring_team
 from app.bot.daily_limit import DailySubmissionLimitReached, stop_if_daily_submission_limit_visible
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+from app.bot.connect_hiring_team import _get_current_job_context
 
 
 async def close_success_modal(page):
@@ -98,6 +99,9 @@ async def run_bot():
                         if await applied_text.count() > 0:
                             print(f"🤖 Zozo: Skipping job {i+1} because it is already 'Applied'.")
                             continue
+
+                        job_title, company_name = await _get_current_job_context(page)
+                        print(f"🤖 Zozo: Found job {i+1}: {job_title} at {company_name}")
                             
                         print(f"🤖 Zozo: Selecting job {i+1}...")
                         await card.click()
