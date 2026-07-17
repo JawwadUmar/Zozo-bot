@@ -272,24 +272,35 @@ async def _js_click_profile_action(profile_page, action_text, exact=False):
         ({ actionText, exact }) => {
             const wanted = actionText.toLowerCase();
 
-            // Scope to the profile top card: climb from the h1 (person's name) to the
-            // nearest container that holds action buttons. Never scan the whole page,
-            // or we might click Connect/Follow for someone in the sidebar.
+            // Scope strictly to the top card to avoid clicking buttons for other people
             let scope = document.querySelector('main h1');
-            while (
-                scope && scope !== document.body &&
-                !scope.querySelector('button, [role="button"], a[href*="custom-invite"]')
-            ) {
-                scope = scope.parentElement;
+            if (scope) {
+                // Climb up from h1 until we find the container holding the action buttons
+                let current = scope.parentElement;
+                while (current && current.tagName !== 'MAIN' && current !== document.body) {
+                    if (current.querySelector('button, [role="button"]')) {
+                        scope = current;
+                        break;
+                    }
+                    current = current.parentElement;
+                }
             }
-            if (!scope || scope === document.body) {
-                scope = document.querySelector('main section:has(h1)') || document.querySelector('main') || document;
+            if (!scope || scope.tagName === 'MAIN') {
+                scope = document.querySelector('main') || document;
             }
-
-            const candidates = [
-                ...scope.querySelectorAll('button, [role="button"], a[href*="custom-invite"]'),
-                ...document.querySelectorAll('[role="menuitem"]')
-            ];
+            
+            let candidates = [];
+            // Catch all possible interactive elements in the top card
+            if (scope) {
+                candidates.push(...scope.querySelectorAll('button, [role="button"], a'));
+            }
+            
+            // If we are looking for a dropdown or fallback, add global menu items
+            if (wanted === 'connect') {
+                candidates.push(...document.querySelectorAll('[role="menuitem"], div[role="button"]'));
+            } else if (wanted === 'more') {
+                candidates.push(...document.querySelectorAll('main button, main [role="button"]'));
+            }
 
             const isVisible = (el) => {
                 const style = window.getComputedStyle(el);
@@ -298,10 +309,19 @@ async def _js_click_profile_action(profile_page, action_text, exact=False):
             };
 
             const textFor = (el) => `${el.innerText || ''} ${el.getAttribute('aria-label') || ''}`.toLowerCase();
-            const matches = (el) => exact
-                ? (el.innerText || '').trim().toLowerCase() === wanted
-                : textFor(el).includes(wanted);
-            const target = candidates.find((el) => isVisible(el) && matches(el));
+            const matches = (el) => {
+                if (exact) {
+                    return (el.innerText || '').trim().toLowerCase() === wanted || 
+                           (el.getAttribute('aria-label') || '').trim().toLowerCase() === wanted;
+                }
+                return textFor(el).includes(wanted);
+            };
+            
+            // To prevent clicking "Connect" on sidebar or suggestion lists
+            const isSidebar = (el) => !!el.closest('aside, .right-rail, .scaffold-layout__aside');
+            const isList = (el) => !!el.closest('ul, li');
+            
+            const target = candidates.find((el) => isVisible(el) && matches(el) && !isSidebar(el) && !isList(el));
             if (!target) return false;
 
             target.click();
@@ -343,7 +363,9 @@ async def _click_connect(profile_page):
         f"{PROFILE_TOP_CARD} button:has-text('Connect'):visible, "
         f"{PROFILE_TOP_CARD} [role='button'][aria-label*='Connect' i]:visible, "
         f"{PROFILE_TOP_CARD} [role='button']:has-text('Connect'):visible, "
-        f"{PROFILE_TOP_CARD} a[href*='custom-invite']:visible"
+        f"{PROFILE_TOP_CARD} a[href*='custom-invite']:visible, "
+        f"{PROFILE_TOP_CARD} a:has-text('Connect'):visible, "
+        f"{PROFILE_TOP_CARD} a[aria-label*='connect' i]:visible"
     )
 
     if await _click_first(direct_connect, timeout=6000, label="direct Connect"):
@@ -352,11 +374,11 @@ async def _click_connect(profile_page):
     # New profile UI usually hides Connect inside the "More" dropdown.
     more_button = profile_page.locator(
         f"{PROFILE_TOP_CARD} button[aria-label*='More actions' i]:visible, "
+        f"{PROFILE_TOP_CARD} button[aria-label='More']:visible, "
         f"{PROFILE_TOP_CARD} button:has-text('More'):visible, "
         f"{PROFILE_TOP_CARD} [role='button'][aria-label*='More actions' i]:visible, "
-        f"{PROFILE_TOP_CARD} [role='button']:has-text('More'):visible, "
-        "main button:text-is('More'):visible, "
-        "main [role='button']:text-is('More'):visible"
+        f"{PROFILE_TOP_CARD} [role='button'][aria-label='More']:visible, "
+        f"{PROFILE_TOP_CARD} [role='button']:has-text('More'):visible"
     )
 
     more_opened = await _click_first(more_button, timeout=5000, label="More actions")
