@@ -1,7 +1,10 @@
 
 from app.utils.human import human_delay
+from app.bot.daily_limit import DailySubmissionLimitReached, stop_if_daily_submission_limit_visible
 
 async def clickEasyApply(page):
+    await stop_if_daily_submission_limit_visible(page)
+
     try:
         # We use the class .jobs-apply-button and filter by visible to ensure we target the right one
         apply_button = page.locator(".jobs-apply-button:visible").first
@@ -11,8 +14,12 @@ async def clickEasyApply(page):
         await human_delay(1, 3)
         await apply_button.click()
         print("✅ Zozo: Clicked 'Easy Apply'!")
+        await stop_if_daily_submission_limit_visible(page)
         
+    except DailySubmissionLimitReached:
+        raise
     except Exception as e:
+        await stop_if_daily_submission_limit_visible(page)
         print(f"⚠️ Zozo: Could not find or click the Easy Apply button: {e}")
         return False
         
@@ -25,9 +32,13 @@ async def clickEasyApply(page):
         await human_delay(1, 2)
         await continue_button.click()
         print("✅ Zozo: Clicked 'Continue applying'!")
+        await stop_if_daily_submission_limit_visible(page)
+    except DailySubmissionLimitReached:
+        raise
     except Exception:
         # If it times out, that means the modal didn't pop up, which is perfectly fine.
         pass
     
     await human_delay(3, 6)
+    await stop_if_daily_submission_limit_visible(page)
     return True

@@ -11,7 +11,6 @@ HIRING_TEAM_MARKER = (
     "h2:has-text('hiring team'), "
     "h3:has-text('hiring team'), "
     "p:has-text('Meet the hiring team'), "
-    ".job-details-people-who-can-help__section--two-pane, "
     ".hirer-card__hirer-information"
 )
 PROFILE_TOP_CARD = "main section:has(h1)"
@@ -199,7 +198,6 @@ async def _get_hiring_team_section(page):
         return section
 
     fallback = page.locator(
-        ".job-details-people-who-can-help__section--two-pane:has(a[href*='/in/']), "
         "div:has(> p:has-text('Meet the hiring team')):has(a[href*='/in/']), "
         "section:has-text('hiring team'):has(a[href*='/in/']), "
         "div:has(> h2:has-text('hiring team')):has(a[href*='/in/']), "
@@ -410,9 +408,9 @@ async def _send_connection_invite(profile_page, note):
             await add_note_button.first.click()
 
             note_input = profile_page.locator(
-                "textarea[name='message']:visible, "
                 "textarea#custom-message:visible, "
-                "textarea:visible"
+                ".send-invite textarea:visible, "
+                "div.artdeco-modal textarea:visible"
             ).first
             await note_input.wait_for(state="visible", timeout=5000)
             await note_input.click()
@@ -421,13 +419,14 @@ async def _send_connection_invite(profile_page, note):
             print("Zozo: Could not add a connection note. Sending without a note if possible.")
 
     send_button = profile_page.locator(
-        "button:has-text('Send invitation'):visible, "
-        "button:has-text('Send now'):visible, "
-        "button:has-text('Send without a note'):visible, "
-        "button:has-text('Send without note'):visible, "
+        "button:text-is('Send invitation'):visible, "
+        "button:text-is('Send now'):visible, "
+        "button:text-is('Send without a note'):visible, "
+        "button:text-is('Send without note'):visible, "
         "button[aria-label='Send now']:visible, "
-        "button[aria-label*='Send' i]:visible, "
-        "button:has-text('Send'):visible"
+        "button[aria-label*='Send invitation' i]:visible, "
+        "div.artdeco-modal button:has-text('Send'):visible, "
+        ".send-invite button:has-text('Send'):visible"
     )
 
     if await _click_first(send_button, timeout=6000, label="Send invitation"):
@@ -445,6 +444,7 @@ async def _send_connection_invite(profile_page, note):
                     return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;
                 };
                 const target = candidates.find((el) => {
+                    if (el.closest('.msg-overlay-conversation-bubble, aside[class*="msg-"]')) return false;
                     const label = `${el.innerText || ''} ${el.getAttribute('aria-label') || ''}`.toLowerCase();
                     return isVisible(el) && !el.disabled && /send( invitation| now| without|$)/.test(label);
                 });

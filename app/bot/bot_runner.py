@@ -7,6 +7,7 @@ from app.utils.human import human_delay
 from app.bot.click_easy_apply import clickEasyApply
 from app.bot.fill_form import fillForm
 from app.bot.connect_hiring_team import connect_to_hiring_team
+from app.bot.daily_limit import DailySubmissionLimitReached, stop_if_daily_submission_limit_visible
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 
@@ -28,6 +29,13 @@ async def connect_after_application(page):
 
     await connect_to_hiring_team(page)
 
+
+async def stop_for_daily_limit(browser, error):
+    print(f"Zozo: {error}")
+    print("Zozo: Stopping the run now. Please apply again tomorrow.")
+    await browser.close()
+
+
 async def run_bot():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
@@ -46,6 +54,11 @@ async def run_bot():
             next_url = urlunparse(parsed._replace(query=urlencode(query, doseq=True)))
             print(f"Opening: {next_url}")
             await page.goto(next_url, wait_until="load", timeout=300000)
+            try:
+                await stop_if_daily_submission_limit_visible(page)
+            except DailySubmissionLimitReached as e:
+                await stop_for_daily_limit(browser, e)
+                return
             
             # Check if we are on a search page with multiple job cards
             try:
@@ -56,6 +69,12 @@ async def run_bot():
                 
             if is_search_page:
                 await human_delay(2, 4) # Give React a moment to finish rendering the list
+                try:
+                    await stop_if_daily_submission_limit_visible(page)
+                except DailySubmissionLimitReached as e:
+                    await stop_for_daily_limit(browser, e)
+                    return
+
                 job_cards = page.locator(".job-card-container")
                 count = await job_cards.count()
                 print(f"🤖 Zozo: Found {count} jobs on this page.")
@@ -83,6 +102,7 @@ async def run_bot():
                         print(f"🤖 Zozo: Selecting job {i+1}...")
                         await card.click()
                         await human_delay(2, 4)
+                        await stop_if_daily_submission_limit_visible(page)
                         
                         success = await clickEasyApply(page)
                         if success:
@@ -101,17 +121,25 @@ async def run_bot():
                                 print(f"⚠️ Zozo: Dismiss button not found or could not be clicked. (Log: {e})")
                             if submitted:
                                 await connect_after_application(page)
+                    except DailySubmissionLimitReached as e:
+                        await stop_for_daily_limit(browser, e)
+                        return
                     except Exception as e:
                         print(f"⚠️ Zozo: Error processing job {i+1}: {e}. Skipping to next job...")
 
             else:
                 # Single job page fallback
-                success = await clickEasyApply(page)
-                if success:
-                    submitted = await fillForm(page)
-                    if submitted:
-                        await close_success_modal(page)
-                        await connect_after_application(page)
+                try:
+                    await stop_if_daily_submission_limit_visible(page)
+                    success = await clickEasyApply(page)
+                    if success:
+                        submitted = await fillForm(page)
+                        if submitted:
+                            await close_success_modal(page)
+                            await connect_after_application(page)
+                except DailySubmissionLimitReached as e:
+                    await stop_for_daily_limit(browser, e)
+                    return
             
             print("🤖 Zozo: All done with current jobs!")
             start+=25
