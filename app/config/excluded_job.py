@@ -6,13 +6,15 @@ excluded_job_title_keywords = [
     "Mobile App Developer"
     "Security Engineer",
     "Guidewire Digital Developer",
-    "Guidewire"
-    "Test Automation Engineer"
+    "Guidewire",
+    "Test Automation Engineer",
+    "Shopify Developer",
+    "Web Engineer"
 ]
 
 excluded_company_keywords = [
     "Tata Consultancy Services",
-    "Lala Company",
+    "Lala Company"
 ]
 
 def isExcludedJob(job_title: str, company_name: str) -> bool:

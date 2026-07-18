@@ -101,16 +101,16 @@ async def run_bot():
                             print(f"🤖 Zozo: Skipping job {i+1} because it is already 'Applied'.")
                             continue
 
+                        print(f"🤖 Zozo: Selecting job {i+1}...")
+                        await card.click()
+                        await human_delay(2, 4)
+                        await stop_if_daily_submission_limit_visible(page)
+
                         job_title, company_name = await _get_current_job_context(page)
                         print(f"🤖 Zozo: Found job {i+1}: {job_title} at {company_name}")
                         
                         if isExcludedJob(job_title, company_name):
                             continue
-                            
-                        print(f"🤖 Zozo: Selecting job {i+1}...")
-                        await card.click()
-                        await human_delay(2, 4)
-                        await stop_if_daily_submission_limit_visible(page)
                         
                         success = await clickEasyApply(page)
                         if success:
