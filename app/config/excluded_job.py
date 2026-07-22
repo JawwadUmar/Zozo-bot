@@ -9,11 +9,15 @@ excluded_job_title_keywords = [
     "Guidewire",
     "Test Automation Engineer",
     "Shopify Developer",
-    "Web Engineer"
+    "Web Engineer",
+    "ServiceNow Developer",
+    "Mainframe Developer"
+    
 ]
 
 excluded_company_keywords = [
     "Tata Consultancy Services",
+    "People Prime Worldwide",
     "Lala Company"
 ]
 
