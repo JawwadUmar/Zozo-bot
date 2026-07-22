@@ -521,9 +521,10 @@ async def connect_to_hiring_team(page):
 
     for member in members:
         name = member["name"]
+        first_name = name.split()[0]
         profile_url = member["profile_url"]
         note = CONNECTION_NOTE_TEMPLATE.format(
-            name=name,
+            name=first_name,
             job_title=job_title,
             company=company,
         )
