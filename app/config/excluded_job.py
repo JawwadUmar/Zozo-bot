@@ -3,7 +3,7 @@ excluded_job_title_keywords = [
     "Internship",
     "Intern",
     "Web Developer",
-    "Mobile App Developer"
+    "Mobile App Developer",
     "Security Engineer",
     "Guidewire Digital Developer",
     "Guidewire",
@@ -11,8 +11,17 @@ excluded_job_title_keywords = [
     "Shopify Developer",
     "Web Engineer",
     "ServiceNow Developer",
-    "Mainframe Developer"
-    
+    "Mainframe Developer",
+    "Frontend",
+    "Front-end",
+    "Salesforce Developer",
+    "MDM Developer",
+    ".Net",
+    "Unity Developer",
+    "Junior",
+    "ORMB Developer",
+    "Shopify",
+    "Expert Windows Driver Engineer"
 ]
 
 excluded_company_keywords = [
