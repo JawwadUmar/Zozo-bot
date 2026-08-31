@@ -368,7 +368,7 @@ async def _click_connect(profile_page):
         f"{PROFILE_TOP_CARD} a[aria-label*='connect' i]:visible"
     )
 
-    if await _click_first(direct_connect, timeout=6000, label="direct Connect"):
+    if await _click_first(direct_connect, timeout=6000, label="Connect"):
         return "connect_clicked"
 
     # New profile UI usually hides Connect inside the "More" dropdown.
@@ -489,22 +489,22 @@ async def _send_connection_invite(profile_page, note):
     return False
 
 
-async def _follow_profile(profile_page, name):
-    follow_button = profile_page.locator(
-        f"{PROFILE_TOP_CARD} button:text-is('Follow'):visible, "
-        f"{PROFILE_TOP_CARD} [role='button']:text-is('Follow'):visible"
-    )
+# async def _follow_profile(profile_page, name):
+#     follow_button = profile_page.locator(
+#         f"{PROFILE_TOP_CARD} button:text-is('Follow'):visible, "
+#         f"{PROFILE_TOP_CARD} [role='button']:text-is('Follow'):visible"
+#     )
 
-    if await _click_first(follow_button, timeout=3000, label="Follow"):
-        print(f"Zozo: Now following {name}.")
-        return True
+#     if await _click_first(follow_button, timeout=3000, label="Follow"):
+#         print(f"Zozo: Now following {name}.")
+#         return True
 
-    if await _js_click_profile_action(profile_page, "follow", exact=True):
-        print(f"Zozo: Now following {name} (via fallback action scan).")
-        return True
+#     if await _js_click_profile_action(profile_page, "follow", exact=True):
+#         print(f"Zozo: Now following {name} (via fallback action scan).")
+#         return True
 
-    print(f"Zozo: Follow button not shown for {name} (likely already following after connect).")
-    return False
+#     print(f"Zozo: Follow button not shown for {name} (likely already following after connect).")
+#     return False
 
 
 async def connect_to_hiring_team(page):
@@ -560,8 +560,8 @@ async def connect_to_hiring_team(page):
             sent = await _send_connection_invite(profile_page, note)
             status = "Sent" if sent else "Could not send"
             print(f"Zozo: Connection request status for {name}: {status}")
-            if sent:
-                await _follow_profile(profile_page, name)
+            # if sent:
+            #     await _follow_profile(profile_page, name)
             _record_hiring_team_outreach(job_title, company, job_url, member, status, note)
             results.append({**member, "status": status})
         except Exception as exc:
