@@ -1,7 +1,7 @@
 import asyncio
 import random
-from playwright.async_api import async_playwright
-from app.config.config import AUTO_CONNECT_HIRING_TEAM, JOBLINK
+from playwright.async_api import async_playwright, BrowserContext
+from app.config.config import AUTO_CONNECT_HIRING_TEAM, JOBLINK, USER_DATA_DIRECTORY
 from app.bot.handle_login import handleLogin
 from app.utils.human import human_delay
 from app.bot.click_easy_apply import clickEasyApply
@@ -40,8 +40,7 @@ async def stop_for_daily_limit(browser, error):
 
 async def run_bot():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
+        context: BrowserContext = await p.chromium.launch_persistent_context(user_data_dir = USER_DATA_DIRECTORY, headless=False)
         page = await context.new_page()
 
         print("🤖 Zozo: Handling Login...")
