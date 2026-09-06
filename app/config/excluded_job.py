@@ -21,7 +21,8 @@ excluded_job_title_keywords = [
     "Junior",
     "ORMB Developer",
     "Shopify",
-    "Expert Windows Driver Engineer"
+    "Expert Windows Driver Engineer",
+    "PHP"
 ]
 
 excluded_company_keywords = [
