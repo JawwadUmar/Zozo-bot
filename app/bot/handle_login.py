@@ -8,6 +8,10 @@ async def handleLogin(page: Page):
     # Wait properly
     await page.wait_for_load_state("domcontentloaded")
 
+    if "/feed/" in page.url:
+        print("✅ Zozo: Already logged in (session restored)!")
+        return
+
     # Selectors
     username = page.get_by_label("Email or phone", exact=True).locator("visible=true").first
     password = page.get_by_label("Password", exact=True).locator("visible=true").first
