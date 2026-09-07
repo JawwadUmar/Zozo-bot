@@ -8,7 +8,7 @@ async def handleLogin(page: Page):
     # Wait properly
     await page.wait_for_load_state("domcontentloaded")
 
-    if "/feed/" in page.url:
+    if "feed" in page.url:
         print("✅ Zozo: Already logged in (session restored)!")
         return
 

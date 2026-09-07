@@ -58,7 +58,7 @@ async def run_bot():
             try:
                 await stop_if_daily_submission_limit_visible(page)
             except DailySubmissionLimitReached as e:
-                await stop_for_daily_limit(browser, e)
+                await stop_for_daily_limit(context, e)
                 return
             
             # Check if we are on a search page with multiple job cards
@@ -73,7 +73,7 @@ async def run_bot():
                 try:
                     await stop_if_daily_submission_limit_visible(page)
                 except DailySubmissionLimitReached as e:
-                    await stop_for_daily_limit(browser, e)
+                    await stop_for_daily_limit(context, e)
                     return
 
                 job_cards = page.locator(".job-card-container")
@@ -129,7 +129,7 @@ async def run_bot():
                             if submitted:
                                 await connect_after_application(page)
                     except DailySubmissionLimitReached as e:
-                        await stop_for_daily_limit(browser, e)
+                        await stop_for_daily_limit(context, e)
                         return
                     except Exception as e:
                         print(f"⚠️ Zozo: Error processing job {i+1}: {e}. Skipping to next job...")
@@ -145,7 +145,7 @@ async def run_bot():
                             await close_success_modal(page)
                             await connect_after_application(page)
                 except DailySubmissionLimitReached as e:
-                    await stop_for_daily_limit(browser, e)
+                    await stop_for_daily_limit(context, e)
                     return
             
             print("🤖 Zozo: All done with current jobs!")
