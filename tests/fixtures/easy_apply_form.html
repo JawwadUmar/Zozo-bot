@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>LinkedIn Easy Apply Form</title></head>
+<body>
+  <div role="dialog" aria-modal="true" class="artdeco-modal jobs-easy-apply-modal">
+    <div class="artdeco-modal__header">
+      <h2>Apply to Software Engineer</h2>
+      <div role="progressbar" aria-valuenow="50" aria-valuetext="Step 2 of 4">Step 2 of 4</div>
+    </div>
+    <div class="artdeco-modal__content">
+      <form>
+        <div class="form-component">
+          <label for="contact-phone">Mobile phone number</label>
+          <input type="text" id="contact-phone" name="phoneNumber" required value="9155027072" />
+        </div>
+        <div class="form-component">
+          <label for="exp-years">How many years of work experience do you have with Python?</label>
+          <input type="text" id="exp-years" name="numeric-exp" required value="" />
+        </div>
+        <div class="form-component">
+          <label for="remote-select">Are you comfortable working in a remote setting?</label>
+          <select id="remote-select" name="remoteWork">
+            <option value="">Select an option</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <fieldset>
+          <legend>Are you legally authorized to work in India?</legend>
+          <label><input type="radio" name="authorized" value="Yes" /> Yes</label>
+          <label><input type="radio" name="authorized" value="No" /> No</label>
+        </fieldset>
+      </form>
+    </div>
+    <div class="artdeco-modal__action-bar">
+      <button type="button" aria-label="Review your application">Review</button>
+      <button type="button" aria-label="Continue to next step">Next</button>
+    </div>
+  </div>
+</body>
+</html>
