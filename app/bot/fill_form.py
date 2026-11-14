@@ -3,6 +3,14 @@ from app.config.config import PHONE_NUMBER
 from app.bot.click_buttons import clickNextOrReviewButton, clickSubmitButton, clickNextButton
 from app.bot.daily_limit import stop_if_daily_submission_limit_visible
 from app.ai.ai_answer import getAiAnswer
+from app.config.selectors import (
+    SUBMIT_APPLICATION_BUTTON, CONTACT_INFO_HEADER, PHONE_NUMBER_INPUT, RESUME_SECTION_TEXT,
+    ADDITIONAL_QUESTIONS_HEADER, WORK_AUTHORIZATION_HEADER, WORK_EXPERIENCE_HEADER,
+    NEXT_OR_REVIEW_BUTTON, LOCATION_INPUT, RADIO_BUTTON_FIELDSET, RADIO_BUTTON_TITLE,
+    RADIO_BUTTON_OPTION_LABEL, RADIO_YES_OPTION, TEXT_INPUT_ARTDECO, SELECT_DROPDOWN,
+    SELECT_OPTION, FORM_FIELD_LABEL,
+)
+from app.utils.locator import get_first_available_locator
 
 async def fillForm(page):
     print("🤖 Zozo: Starting dynamic form filling...")
@@ -15,46 +23,46 @@ async def fillForm(page):
         await stop_if_daily_submission_limit_visible(page)
         
         # 1. Check if we are on the final Review page with a Submit button
-        submit_btn = page.locator("button[aria-label='Submit application']:visible")
-        if await submit_btn.count() > 0:
+        submit_btn = await get_first_available_locator(page, SUBMIT_APPLICATION_BUTTON)
+        if submit_btn is not None:
             print("🤖 Zozo: 'Submit' button found. Attempting to submit...")
             submitted = await clickSubmitButton(page)
             await stop_if_daily_submission_limit_visible(page)
             return submitted
             
         # 2. Check for Contact info section
-        contact_info_header = page.locator("h3:has-text('Contact info'):visible")
-        if await contact_info_header.count() > 0:
+        contact_info_header = await get_first_available_locator(page, CONTACT_INFO_HEADER)
+        if contact_info_header is not None:
             await handleContactInfo(page)
             continue
             
         # 2.1 Check for Phone Number section (fallback)
-        phone_input = page.locator('input[id$="-phoneNumber-nationalNumber"]:visible')
-        if await phone_input.count() > 0:
+        phone_input = await get_first_available_locator(page, PHONE_NUMBER_INPUT)
+        if phone_input is not None:
             await fillPhoneNumber(page)
             continue
             
         # 3. Check for Resume section
-        resume_text = page.locator("span:has-text('Be sure to include an updated resume'):visible")
-        if await resume_text.count() > 0:
+        resume_text = await get_first_available_locator(page, RESUME_SECTION_TEXT)
+        if resume_text is not None:
             await handleResumePage(page)
             continue
             
         # 4. Check for Additional Questions
-        add_q_header = page.locator("h3:has-text('Additional Questions'):visible")
-        if await add_q_header.count() > 0:
+        add_q_header = await get_first_available_locator(page, ADDITIONAL_QUESTIONS_HEADER)
+        if add_q_header is not None:
             await handleAdditionalQuestions(page)
             continue
             
         # 5. Check for Work Authorization
-        work_auth_header = page.locator("h3:has-text('Work authorization'):visible")
-        if await work_auth_header.count() > 0:
+        work_auth_header = await get_first_available_locator(page, WORK_AUTHORIZATION_HEADER)
+        if work_auth_header is not None:
             await handleWorkAuthorization(page)
             continue
             
         # 6. Check for Work Experience
-        work_exp_header = page.locator("h3:has-text('Work experience'):visible")
-        if await work_exp_header.count() > 0:
+        work_exp_header = await get_first_available_locator(page, WORK_EXPERIENCE_HEADER)
+        if work_exp_header is not None:
             await handleWorkExperience(page)
             continue
             
@@ -62,8 +70,8 @@ async def fillForm(page):
         print("🤖 Zozo: Unknown section or nothing to fill. Trying to click Next/Review...")
         try:
             # Check if there's actually a next/review button
-            btn = page.locator("button[aria-label='Continue to next step']:visible, button[aria-label='Review your application']:visible")
-            if await btn.count() > 0:
+            btn = await get_first_available_locator(page, NEXT_OR_REVIEW_BUTTON)
+            if btn is not None:
                 await clickNextOrReviewButton(page)
             else:
                 print("⚠️ Zozo: Stuck on form. No Next/Review/Submit buttons visible.")
@@ -78,37 +86,37 @@ async def fillForm(page):
 async def handleContactInfo(page):
     print("🤖 Zozo: Checking for 'Contact info' section...")
     try:
-        header = page.locator("h3:has-text('Contact info')").first
+        header = await get_first_available_locator(page, CONTACT_INFO_HEADER)
         await header.wait_for(state="visible", timeout=3000)
         print("🤖 Zozo: 'Contact info' section found. Checking fields...")
         
         # 1. Fill Phone Number
         if PHONE_NUMBER:
-            phone_input = page.locator('input[id$="-phoneNumber-nationalNumber"]:visible')
-            if await phone_input.count() > 0:
-                current_value = await phone_input.first.input_value()
+            phone_input = await get_first_available_locator(page, PHONE_NUMBER_INPUT)
+            if phone_input is not None:
+                current_value = await phone_input.input_value()
                 if not current_value.strip():
                     print(f"🤖 Zozo: Phone number field is empty. Filling it with {PHONE_NUMBER}...")
-                    await phone_input.first.click()
+                    await phone_input.click()
                     await human_typing(phone_input.first, PHONE_NUMBER)
                     print("✅ Zozo: Filled the phone number.")
                 else:
                     print(f"✅ Zozo: Phone number already filled with '{current_value}'.")
         
         # 2. Fill Location
-        location_input = page.locator('input[id$="-location-GEO-LOCATION"]:visible')
-        if await location_input.count() > 0:
-            current_value = await location_input.first.input_value()
+        location_input = await get_first_available_locator(page, LOCATION_INPUT)
+        if location_input is not None:
+            current_value = await location_input.input_value()
             if not current_value.strip():
                 print("🤖 Zozo: Location field is empty. Filling it...")
-                await location_input.first.click()
+                await location_input.click()
                 await human_typing(location_input.first, "Kolkata, West Bengal, India")
                 await human_delay(2, 3) # Wait for typeahead options to appear
                 
                 # Press ArrowDown and Enter to select the first option from dropdown
-                await location_input.first.press("ArrowDown")
+                await location_input.press("ArrowDown")
                 await human_delay(0.5, 1)
-                await location_input.first.press("Enter")
+                await location_input.press("Enter")
                 print("✅ Zozo: Filled the location.")
             else:
                 print(f"✅ Zozo: Location already filled with '{current_value}'.")
@@ -127,7 +135,7 @@ async def fillPhoneNumber(page):
     print("🤖 Zozo: Checking for phone number field...")
     try:
         # The ID contains dynamic parts, so we match the end of the ID which is consistent
-        phone_input = page.locator('input[id$="-phoneNumber-nationalNumber"]')
+        phone_input = await get_first_available_locator(page, PHONE_NUMBER_INPUT)
         
         # Wait a short time for the field to appear on the modal
         await phone_input.wait_for(state="visible", timeout=5000)
@@ -151,7 +159,7 @@ async def handleResumePage(page):
     print("🤖 Zozo: Checking for 'Resume' section...")
     try:
         # Check if the specific text/span exists
-        resume_text = page.locator("span:has-text('Be sure to include an updated resume')").first
+        resume_text = await get_first_available_locator(page, RESUME_SECTION_TEXT)
         await resume_text.wait_for(state="visible", timeout=3000)
         print("🤖 Zozo: 'Resume' section found. Resume already attached, clicking Next...")
         await clickNextOrReviewButton(page)
@@ -162,18 +170,18 @@ async def handleWorkAuthorization(page):
     print("🤖 Zozo: Checking for 'Work authorization' section...")
     try:
         # Check if the header exists
-        header = page.locator("h3:has-text('Work authorization')").first
+        header = await get_first_available_locator(page, WORK_AUTHORIZATION_HEADER)
         await header.wait_for(state="visible", timeout=3000)
         print("🤖 Zozo: 'Work authorization' section found. Filling answers...")
         
         # Handle Radio Buttons (Fieldsets)
-        fieldsets = page.locator("fieldset[data-test-form-builder-radio-button-form-component='true']")
+        fieldsets = page.locator(RADIO_BUTTON_FIELDSET[0])
         fs_count = await fieldsets.count()
         for i in range(fs_count):
             fs_el = fieldsets.nth(i)
             if await fs_el.is_visible():
                 # Extract question text
-                title_el = fs_el.locator("span[data-test-form-builder-radio-button-form-component__title]")
+                title_el = fs_el.locator(RADIO_BUTTON_TITLE[0])
                 question_text = "Unknown Radio Question"
                 if await title_el.count() > 0:
                     question_text = await title_el.first.inner_text()
@@ -182,7 +190,7 @@ async def handleWorkAuthorization(page):
                 print(f"\n🤖 Zozo detected question: {question_text}")
                 
                 # Extract options
-                options_loc = fs_el.locator("label[data-test-text-selectable-option__label]")
+                options_loc = fs_el.locator(RADIO_BUTTON_OPTION_LABEL[0])
                 options_count = await options_loc.count()
                 
                 available_options = []
@@ -195,8 +203,8 @@ async def handleWorkAuthorization(page):
                 
                 # Select the 'Yes' option or first option
                 if options_count > 0:
-                    yes_option = fs_el.locator("label:has-text('Yes')").first
-                    if await yes_option.count() > 0:
+                    yes_option = await get_first_available_locator(fs_el, RADIO_YES_OPTION)
+                    if yes_option is not None:
                         await yes_option.click()
                         print(f"✅ Zozo answer: Yes")
                     else:
@@ -222,12 +230,12 @@ async def handleAdditionalQuestions(page):
     print("🤖 Zozo: Checking for 'Additional Questions' section...")
     try:
         # Check if the header exists
-        header = page.locator("h3:has-text('Additional Questions')").first
+        header = await get_first_available_locator(page, ADDITIONAL_QUESTIONS_HEADER)
         await header.wait_for(state="visible", timeout=3000)
         print("🤖 Zozo: 'Additional Questions' section found. Filling answers...")
         
         # 1. Handle Text Inputs
-        text_inputs = page.locator("input.artdeco-text-input--input[type='text']")
+        text_inputs = page.locator(TEXT_INPUT_ARTDECO[0])
         count = await text_inputs.count()
         for i in range(count):
             input_el = text_inputs.nth(i)
@@ -239,8 +247,8 @@ async def handleAdditionalQuestions(page):
                     # Extract question text from label
                     question_text = "Unknown Question"
                     if input_id:
-                        label = page.locator(f"label[for='{input_id}']")
-                        if await label.count() > 0:
+                        label = await get_first_available_locator(page, [FORM_FIELD_LABEL[0].format(id=input_id)])
+                        if label is not None:
                             question_text = await label.first.inner_text()
                     
                     # Clean up the text (removes extra newlines/spaces)
@@ -261,7 +269,7 @@ async def handleAdditionalQuestions(page):
                         print(f"✅ Zozo answer: {answer}")
         
         # 2. Handle Select Dropdowns
-        selects = page.locator("select.fb-dash-form-element__select-dropdown")
+        selects = page.locator(SELECT_DROPDOWN[0])
         select_count = await selects.count()
         for i in range(select_count):
             select_el = selects.nth(i)
@@ -271,15 +279,15 @@ async def handleAdditionalQuestions(page):
                 # Extract question text from label
                 question_text = "Unknown Question"
                 if select_id:
-                    label = page.locator(f"label[for='{select_id}']")
-                    if await label.count() > 0:
+                    label = await get_first_available_locator(page, [FORM_FIELD_LABEL[0].format(id=select_id)])
+                    if label is not None:
                         question_text = await label.first.inner_text()
                 
                 question_text = " ".join(question_text.split())
                 print(f"\n🤖 Zozo detected question: {question_text}")
                 
                 # Extract and print options
-                options_loc = select_el.locator("option")
+                options_loc = select_el.locator(SELECT_OPTION[0])
                 options_count = await options_loc.count()
                 
                 available_options = []
@@ -299,13 +307,13 @@ async def handleAdditionalQuestions(page):
                     answer_text = await options_loc.nth(1).inner_text()
                     print(f"✅ Zozo answer: {answer_text}")
         # 3. Handle Radio Buttons (Fieldsets)
-        fieldsets = page.locator("fieldset[data-test-form-builder-radio-button-form-component='true']")
+        fieldsets = page.locator(RADIO_BUTTON_FIELDSET[0])
         fs_count = await fieldsets.count()
         for i in range(fs_count):
             fs_el = fieldsets.nth(i)
             if await fs_el.is_visible():
                 # Extract question text
-                title_el = fs_el.locator("span[data-test-form-builder-radio-button-form-component__title]")
+                title_el = fs_el.locator(RADIO_BUTTON_TITLE[0])
                 question_text = "Unknown Radio Question"
                 if await title_el.count() > 0:
                     question_text = await title_el.first.inner_text()
@@ -314,7 +322,7 @@ async def handleAdditionalQuestions(page):
                 print(f"\n🤖 Zozo detected question: {question_text}")
                 
                 # Extract options
-                options_loc = fs_el.locator("label[data-test-text-selectable-option__label]")
+                options_loc = fs_el.locator(RADIO_BUTTON_OPTION_LABEL[0])
                 options_count = await options_loc.count()
                 
                 available_options = []
@@ -344,12 +352,12 @@ async def handleWorkExperience(page):
     print("🤖 Zozo: Checking for 'Work experience' section...")
     try:
         # Check if the header exists
-        header = page.locator("h3:has-text('Work experience')").first
+        header = await get_first_available_locator(page, WORK_EXPERIENCE_HEADER)
         await header.wait_for(state="visible", timeout=3000)
         print("🤖 Zozo: 'Work experience' section found. Filling answers...")
         
         # 1. Handle Text Inputs
-        text_inputs = page.locator("input.artdeco-text-input--input[type='text']")
+        text_inputs = page.locator(TEXT_INPUT_ARTDECO[0])
         count = await text_inputs.count()
         for i in range(count):
             input_el = text_inputs.nth(i)
@@ -361,8 +369,8 @@ async def handleWorkExperience(page):
                     # Extract question text from label
                     question_text = "Unknown Question"
                     if input_id:
-                        label = page.locator(f"label[for='{input_id}']")
-                        if await label.count() > 0:
+                        label = await get_first_available_locator(page, [FORM_FIELD_LABEL[0].format(id=input_id)])
+                        if label is not None:
                             question_text = await label.first.inner_text()
                     
                     # Clean up the text (removes extra newlines/spaces)
@@ -383,7 +391,7 @@ async def handleWorkExperience(page):
                         print(f"✅ Zozo answer: {answer}")
 
         # 2. Handle Select Dropdowns
-        selects = page.locator("select.fb-dash-form-element__select-dropdown")
+        selects = page.locator(SELECT_DROPDOWN[0])
         select_count = await selects.count()
         for i in range(select_count):
             select_el = selects.nth(i)
@@ -393,15 +401,15 @@ async def handleWorkExperience(page):
                 # Extract question text from label
                 question_text = "Unknown Question"
                 if select_id:
-                    label = page.locator(f"label[for='{select_id}']")
-                    if await label.count() > 0:
+                    label = await get_first_available_locator(page, [FORM_FIELD_LABEL[0].format(id=select_id)])
+                    if label is not None:
                         question_text = await label.first.inner_text()
                 
                 question_text = " ".join(question_text.split())
                 print(f"\n🤖 Zozo detected question: {question_text}")
                 
                 # Extract and print options
-                options_loc = select_el.locator("option")
+                options_loc = select_el.locator(SELECT_OPTION[0])
                 options_count = await options_loc.count()
                 
                 available_options = []
@@ -426,13 +434,13 @@ async def handleWorkExperience(page):
                         print(f"✅ Zozo fallback answer: {answer_text}")
 
         # 3. Handle Radio Buttons (Fieldsets)
-        fieldsets = page.locator("fieldset[data-test-form-builder-radio-button-form-component='true']")
+        fieldsets = page.locator(RADIO_BUTTON_FIELDSET[0])
         fs_count = await fieldsets.count()
         for i in range(fs_count):
             fs_el = fieldsets.nth(i)
             if await fs_el.is_visible():
                 # Extract question text
-                title_el = fs_el.locator("span[data-test-form-builder-radio-button-form-component__title]")
+                title_el = fs_el.locator(RADIO_BUTTON_TITLE[0])
                 question_text = "Unknown Radio Question"
                 if await title_el.count() > 0:
                     question_text = await title_el.first.inner_text()
@@ -441,7 +449,7 @@ async def handleWorkExperience(page):
                 print(f"\n🤖 Zozo detected question: {question_text}")
                 
                 # Extract options
-                options_loc = fs_el.locator("label[data-test-text-selectable-option__label]")
+                options_loc = fs_el.locator(RADIO_BUTTON_OPTION_LABEL[0])
                 options_count = await options_loc.count()
                 
                 available_options = []

@@ -5,15 +5,18 @@ from urllib.parse import urljoin, urlparse, urlunparse
 
 from app.config.config import CONNECTION_NOTE_TEMPLATE
 from app.utils.human import human_delay, human_typing
-
-
-HIRING_TEAM_MARKER = (
-    "h2:has-text('hiring team'), "
-    "h3:has-text('hiring team'), "
-    "p:has-text('Meet the hiring team'), "
-    ".hirer-card__hirer-information"
+from app.config.selectors import (
+    JOB_TITLE, COMPANY_NAME, HIRING_TEAM_MARKER, PROFILE_TOP_CARD, JOB_DETAILS_PANE,
+    HIRING_TEAM_SECTION_XPATH, HIRING_TEAM_SECTION_FALLBACK, HIRING_TEAM_PROFILE_LINK,
+    CONNECTION_PENDING, ALREADY_CONNECTED, DIRECT_CONNECT_BUTTON, MORE_ACTIONS_BUTTON,
+    MENU_CONNECT_BUTTON, ADD_NOTE_BUTTON, CONNECTION_NOTE_TEXTAREA, SEND_INVITATION_BUTTON,
+    JS_PROFILE_ACTION_SCOPE, JS_PROFILE_ACTION_CANDIDATES, JS_CONNECT_MENU_CANDIDATES,
+    JS_MORE_GLOBAL_CANDIDATES, JS_SIDEBAR_EXCLUSION, JS_SEND_INVITE_CANDIDATES,
+    JS_SEND_INVITE_EXCLUSION, JS_MAIN_FALLBACK, JS_LIST_EXCLUSION,
 )
-PROFILE_TOP_CARD = "main section:has(h1)"
+from app.utils.locator import get_first_available_locator
+
+
 TRACKER_PATH = Path(__file__).resolve().parents[2] / "data" / "job_applications.md"
 
 
@@ -113,23 +116,10 @@ def _record_hiring_team_outreach(job_title, company, job_url, member, status, no
 
 
 async def _get_current_job_context(page):
-    job_title = await _safe_inner_text(
-        page.locator(
-            ".job-details-jobs-unified-top-card__job-title, "
-            ".jobs-unified-top-card__job-title, "
-            "h1:visible"
-        ),
-        "the role",
-    )
-    company = await _safe_inner_text(
-        page.locator(
-            ".job-details-jobs-unified-top-card__company-name a, "
-            ".job-details-jobs-unified-top-card__company-name, "
-            ".jobs-unified-top-card__company-name a, "
-            ".jobs-unified-top-card__company-name"
-        ),
-        "your company",
-    )
+    job_title_locator = await get_first_available_locator(page, JOB_TITLE, state="attached")
+    job_title = await _safe_inner_text(job_title_locator, "the role")
+    company_locator = await get_first_available_locator(page, COMPANY_NAME, state="attached")
+    company = await _safe_inner_text(company_locator, "your company")
     return job_title, company
 
 
@@ -144,7 +134,9 @@ async def _bring_marker_into_view(marker):
 
 
 async def _scroll_to_hiring_team(page):
-    marker = page.locator(HIRING_TEAM_MARKER).first
+    marker = await get_first_available_locator(page, HIRING_TEAM_MARKER, state="attached")
+    if marker is None:
+        return False
 
     try:
         await marker.wait_for(state="attached", timeout=2500)
@@ -154,12 +146,7 @@ async def _scroll_to_hiring_team(page):
     if await _bring_marker_into_view(marker):
         return True
 
-    details_panes = page.locator(
-        ".jobs-search__job-details--container:visible, "
-        ".jobs-search__right-rail:visible, "
-        ".jobs-details__main-content:visible, "
-        ".scaffold-layout__detail:visible"
-    )
+    details_panes = page.locator(", ".join(JOB_DETAILS_PANE))
 
     try:
         await details_panes.first.hover(timeout=2000)
@@ -190,20 +177,15 @@ async def _get_hiring_team_section(page):
         print("Zozo: 'Meet the hiring team' section not present on this job post.")
         return None
 
-    marker = page.locator(HIRING_TEAM_MARKER).first
-    section = marker.locator(
-        "xpath=ancestor-or-self::*[(self::section or self::div) and .//a[contains(@href, '/in/')]][1]"
-    ).first
-    if await section.count() > 0:
+    marker = await get_first_available_locator(page, HIRING_TEAM_MARKER, state="attached")
+    if marker is None:
+        return None
+    section = await get_first_available_locator(marker, HIRING_TEAM_SECTION_XPATH, state="attached")
+    if section is not None:
         return section
 
-    fallback = page.locator(
-        "div:has(> p:has-text('Meet the hiring team')):has(a[href*='/in/']), "
-        "section:has-text('hiring team'):has(a[href*='/in/']), "
-        "div:has(> h2:has-text('hiring team')):has(a[href*='/in/']), "
-        "div:has(> h3:has-text('hiring team')):has(a[href*='/in/'])"
-    ).first
-    if await fallback.count() > 0:
+    fallback = await get_first_available_locator(page, HIRING_TEAM_SECTION_FALLBACK, state="attached")
+    if fallback is not None:
         return fallback
 
     print("Zozo: Found the hiring team section but no profile links inside it.")
@@ -232,7 +214,7 @@ async def _get_hiring_team_members(page):
     if section is None or await section.count() == 0:
         return []
 
-    links = section.locator("a[href*='/in/']")
+    links = section.locator(HIRING_TEAM_PROFILE_LINK[0])
     members_by_url = {}
 
     for index in range(await links.count()):
@@ -256,6 +238,8 @@ async def _get_hiring_team_members(page):
 
 
 async def _click_first(locator, timeout=3000, label="button"):
+    if locator is None:
+        return False
     try:
         await locator.first.wait_for(state="visible", timeout=timeout)
         await human_delay(1, 2)
@@ -269,16 +253,16 @@ async def _click_first(locator, timeout=3000, label="button"):
 async def _js_click_profile_action(profile_page, action_text, exact=False):
     return await profile_page.evaluate(
         """
-        ({ actionText, exact }) => {
+        ({ actionText, exact, scopeSelector, actionCandidates, connectMenuCandidates, moreCandidates, sidebarExclusion, mainFallback, listExclusion }) => {
             const wanted = actionText.toLowerCase();
 
             // Scope strictly to the top card to avoid clicking buttons for other people
-            let scope = document.querySelector('main h1');
+            let scope = document.querySelector(scopeSelector);
             if (scope) {
                 // Climb up from h1 until we find the container holding the action buttons
                 let current = scope.parentElement;
                 while (current && current.tagName !== 'MAIN' && current !== document.body) {
-                    if (current.querySelector('button, [role="button"]')) {
+                    if (current.querySelector(actionCandidates)) {
                         scope = current;
                         break;
                     }
@@ -286,20 +270,20 @@ async def _js_click_profile_action(profile_page, action_text, exact=False):
                 }
             }
             if (!scope || scope.tagName === 'MAIN') {
-                scope = document.querySelector('main') || document;
+                scope = document.querySelector(mainFallback) || document;
             }
             
             let candidates = [];
             // Catch all possible interactive elements in the top card
             if (scope) {
-                candidates.push(...scope.querySelectorAll('button, [role="button"], a'));
+                candidates.push(...scope.querySelectorAll(actionCandidates));
             }
             
             // If we are looking for a dropdown or fallback, add global menu items
             if (wanted === 'connect') {
-                candidates.push(...document.querySelectorAll('[role="menuitem"], div[role="button"]'));
+                candidates.push(...document.querySelectorAll(connectMenuCandidates));
             } else if (wanted === 'more') {
-                candidates.push(...document.querySelectorAll('main button, main [role="button"]'));
+                candidates.push(...document.querySelectorAll(moreCandidates));
             }
 
             const isVisible = (el) => {
@@ -318,8 +302,8 @@ async def _js_click_profile_action(profile_page, action_text, exact=False):
             };
             
             // To prevent clicking "Connect" on sidebar or suggestion lists
-            const isSidebar = (el) => !!el.closest('aside, .right-rail, .scaffold-layout__aside');
-            const isList = (el) => !!el.closest('ul, li');
+            const isSidebar = (el) => !!el.closest(sidebarExclusion);
+            const isList = (el) => !!el.closest(listExclusion);
             
             const target = candidates.find((el) => isVisible(el) && matches(el) && !isSidebar(el) && !isList(el));
             if (!target) return false;
@@ -328,28 +312,31 @@ async def _js_click_profile_action(profile_page, action_text, exact=False):
             return true;
         }
         """,
-        {"actionText": action_text, "exact": exact},
+        {
+            "actionText": action_text,
+            "exact": exact,
+            "scopeSelector": JS_PROFILE_ACTION_SCOPE[0],
+            "actionCandidates": ", ".join(JS_PROFILE_ACTION_CANDIDATES),
+            "connectMenuCandidates": ", ".join(JS_CONNECT_MENU_CANDIDATES),
+            "moreCandidates": ", ".join(JS_MORE_GLOBAL_CANDIDATES),
+            "sidebarExclusion": ", ".join(JS_SIDEBAR_EXCLUSION),
+            "mainFallback": JS_MAIN_FALLBACK[0],
+            "listExclusion": ", ".join(JS_LIST_EXCLUSION),
+        },
     )
 
 
 async def _has_connection_pending(profile_page):
-    pending = profile_page.locator(
-        f"{PROFILE_TOP_CARD} button:has-text('Pending'):visible, "
-        f"{PROFILE_TOP_CARD} span:has-text('Pending'):visible, "
-        f"{PROFILE_TOP_CARD} button[aria-label*='Pending' i]:visible"
-    )
-    return await pending.count() > 0
+    pending = await get_first_available_locator(profile_page, CONNECTION_PENDING, state="attached")
+    return pending is not None
 
 
 async def _is_already_connected(profile_page):
     # NOTE: a "Message" button is NOT proof of a connection anymore — LinkedIn's
     # new profile UI shows Message for 2nd/3rd degree profiles too. Only the
     # "1st" distance badge next to the name is reliable.
-    connected = profile_page.locator(
-        f"{PROFILE_TOP_CARD} span:has-text('1st'):visible, "
-        f"{PROFILE_TOP_CARD} span:has-text('1st degree connection'):visible"
-    )
-    return await connected.count() > 0
+    connected = await get_first_available_locator(profile_page, ALREADY_CONNECTED, state="attached")
+    return connected is not None
 
 
 async def _click_connect(profile_page):
@@ -358,28 +345,13 @@ async def _click_connect(profile_page):
     if await _has_connection_pending(profile_page):
         return "already_pending"
 
-    direct_connect = profile_page.locator(
-        f"{PROFILE_TOP_CARD} button[aria-label*='Invite' i][aria-label*='connect' i]:visible, "
-        f"{PROFILE_TOP_CARD} button:has-text('Connect'):visible, "
-        f"{PROFILE_TOP_CARD} [role='button'][aria-label*='Connect' i]:visible, "
-        f"{PROFILE_TOP_CARD} [role='button']:has-text('Connect'):visible, "
-        f"{PROFILE_TOP_CARD} a[href*='custom-invite']:visible, "
-        f"{PROFILE_TOP_CARD} a:has-text('Connect'):visible, "
-        f"{PROFILE_TOP_CARD} a[aria-label*='connect' i]:visible"
-    )
+    direct_connect = await get_first_available_locator(profile_page, DIRECT_CONNECT_BUTTON)
 
     if await _click_first(direct_connect, timeout=6000, label="Connect"):
         return "connect_clicked"
 
     # New profile UI usually hides Connect inside the "More" dropdown.
-    more_button = profile_page.locator(
-        f"{PROFILE_TOP_CARD} button[aria-label*='More actions' i]:visible, "
-        f"{PROFILE_TOP_CARD} button[aria-label='More']:visible, "
-        f"{PROFILE_TOP_CARD} button:has-text('More'):visible, "
-        f"{PROFILE_TOP_CARD} [role='button'][aria-label*='More actions' i]:visible, "
-        f"{PROFILE_TOP_CARD} [role='button'][aria-label='More']:visible, "
-        f"{PROFILE_TOP_CARD} [role='button']:has-text('More'):visible"
-    )
+    more_button = await get_first_available_locator(profile_page, MORE_ACTIONS_BUTTON)
 
     more_opened = await _click_first(more_button, timeout=5000, label="More actions")
     if not more_opened and await _js_click_profile_action(profile_page, "more", exact=True):
@@ -389,13 +361,7 @@ async def _click_connect(profile_page):
     if more_opened:
         await human_delay(1, 2)
 
-        menu_connect = profile_page.locator(
-            "[role='menuitem']:has-text('Connect'):visible, "
-            "[role='menu'] a[href*='custom-invite']:visible, "
-            "a[role='menuitem'][href*='custom-invite']:visible, "
-            "div[aria-label*='Invite' i][aria-label*='connect' i]:visible, "
-            "div[role='button']:has-text('Connect'):visible"
-        )
+        menu_connect = await get_first_available_locator(profile_page, MENU_CONNECT_BUTTON)
 
         if await _click_first(menu_connect, timeout=5000, label="More menu Connect"):
             return "connect_clicked"
@@ -418,38 +384,22 @@ async def _send_connection_invite(profile_page, note):
         return True
 
     if note:
-        add_note_button = profile_page.locator(
-            "button:has-text('Add a note'):visible, "
-            "button:has-text('Add note'):visible, "
-            "button[aria-label*='Add a note' i]:visible"
-        )
+        add_note_button = await get_first_available_locator(profile_page, ADD_NOTE_BUTTON)
 
         try:
-            await add_note_button.first.wait_for(state="visible", timeout=4000)
+            await add_note_button.wait_for(state="visible", timeout=4000)
             await human_delay(1, 2)
-            await add_note_button.first.click()
+            await add_note_button.click()
 
-            note_input = profile_page.locator(
-                "textarea#custom-message:visible, "
-                ".send-invite textarea:visible, "
-                "div.artdeco-modal textarea:visible"
-            ).first
-            await note_input.wait_for(state="visible", timeout=5000)
+            note_input = await get_first_available_locator(profile_page, CONNECTION_NOTE_TEXTAREA, timeout=5000)
+            if note_input is None:
+                raise TimeoutError("Connection note field not found")
             await note_input.click()
             await human_typing(note_input, note[:300])
         except Exception:
             print("Zozo: Could not add a connection note. Sending without a note if possible.")
 
-    send_button = profile_page.locator(
-        "button:text-is('Send invitation'):visible, "
-        "button:text-is('Send now'):visible, "
-        "button:text-is('Send without a note'):visible, "
-        "button:text-is('Send without note'):visible, "
-        "button[aria-label='Send now']:visible, "
-        "button[aria-label*='Send invitation' i]:visible, "
-        "div.artdeco-modal button:has-text('Send'):visible, "
-        ".send-invite button:has-text('Send'):visible"
-    )
+    send_button = await get_first_available_locator(profile_page, SEND_INVITATION_BUTTON)
 
     if await _click_first(send_button, timeout=6000, label="Send invitation"):
         await human_delay(1, 2)
@@ -458,22 +408,26 @@ async def _send_connection_invite(profile_page, note):
     try:
         clicked = await profile_page.evaluate(
             """
-            () => {
-                const candidates = [...document.querySelectorAll('button, [role="button"]')];
+            ({ candidatesSelector, exclusionSelector }) => {
+                const candidates = [...document.querySelectorAll(candidatesSelector)];
                 const isVisible = (el) => {
                     const style = window.getComputedStyle(el);
                     const rect = el.getBoundingClientRect();
                     return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;
                 };
                 const target = candidates.find((el) => {
-                    if (el.closest('.msg-overlay-conversation-bubble, aside[class*="msg-"]')) return false;
+                    if (el.closest(exclusionSelector)) return false;
                     const label = `${el.innerText || ''} ${el.getAttribute('aria-label') || ''}`.toLowerCase();
                     return isVisible(el) && !el.disabled && /send( invitation| now| without|$)/.test(label);
                 });
                 if (!target) return false;
                 target.click();
                 return true;
-            }
+            },
+            {
+                "candidatesSelector": ", ".join(JS_SEND_INVITE_CANDIDATES),
+                "exclusionSelector": ", ".join(JS_SEND_INVITE_EXCLUSION),
+            },
             """
         )
         if clicked:
@@ -487,24 +441,6 @@ async def _send_connection_invite(profile_page, note):
         return True
 
     return False
-
-
-# async def _follow_profile(profile_page, name):
-#     follow_button = profile_page.locator(
-#         f"{PROFILE_TOP_CARD} button:text-is('Follow'):visible, "
-#         f"{PROFILE_TOP_CARD} [role='button']:text-is('Follow'):visible"
-#     )
-
-#     if await _click_first(follow_button, timeout=3000, label="Follow"):
-#         print(f"Zozo: Now following {name}.")
-#         return True
-
-#     if await _js_click_profile_action(profile_page, "follow", exact=True):
-#         print(f"Zozo: Now following {name} (via fallback action scan).")
-#         return True
-
-#     print(f"Zozo: Follow button not shown for {name} (likely already following after connect).")
-#     return False
 
 
 async def connect_to_hiring_team(page):

@@ -4,8 +4,11 @@ Centralized Playwright Selectors for Zozo-bot
 Every selector extracted from the codebase, grouped by UI element/action.
 Each variable is a list of selector strings, even when there is currently only one.
 
-DO NOT import this file yet — the original source files have NOT been modified.
-This file exists purely for review and future refactoring.
+Usage:
+    from app.config.selectors import EASY_APPLY_BUTTON
+    from app.utils.locator import get_first_available_locator
+
+    locator = await get_first_available_locator(page, EASY_APPLY_BUTTON)
 """
 
 # ==============================================================================
@@ -54,7 +57,10 @@ DISMISS_MODAL_BUTTON = [
 # ==============================================================================
 
 # The main "Easy Apply" button on the job detail pane
-EASY_APPLY_BUTTON = [".jobs-apply-button:visible"]
+EASY_APPLY_BUTTON = [
+    "button[aria-label*='Easy Apply']:visible",
+    ".jobs-apply-button:visible",
+]
 
 # "Continue applying" modal button (role-based selector)
 # Used via: page.get_by_role("button", name="Continue applying").locator("visible=true")
@@ -66,22 +72,19 @@ CONTINUE_APPLYING_BUTTON = ["get_by_role:button:Continue applying"]
 
 # "Continue to next step" / Next button
 # Used in: clickNextOrReviewButton, clickNextButton, and fill_form.py fallback
-NEXT_STEP_BUTTON = ["button[aria-label='Continue to next step']:visible"]
+NEXT_STEP_BUTTON = ["footer button:has-text('Next'):visible", "button[aria-label='Continue to next step']:visible"]
 
 # "Review your application" button
 # Used in: clickNextOrReviewButton, clickReviewButton, and fill_form.py fallback
-REVIEW_APPLICATION_BUTTON = ["button[aria-label='Review your application']:visible"]
+REVIEW_APPLICATION_BUTTON = ["footer button:has-text('Review'):visible", "button[aria-label='Review your application']:visible"]
 
 # Combined Next-or-Review selector (comma-separated in the original)
 # Used in: clickNextOrReviewButton, fillForm fallback
-NEXT_OR_REVIEW_BUTTON = [
-    "button[aria-label='Continue to next step']:visible",
-    "button[aria-label='Review your application']:visible",
-]
+NEXT_OR_REVIEW_BUTTON = NEXT_STEP_BUTTON + REVIEW_APPLICATION_BUTTON
 
 # "Submit application" button
 # Used in: clickSubmitButton, fillForm step-1 check
-SUBMIT_APPLICATION_BUTTON = ["button[aria-label='Submit application']:visible"]
+SUBMIT_APPLICATION_BUTTON = ["footer button:has-text('Submit application'):visible", "button[aria-label='Submit application']:visible"]
 
 # "Follow company" checkbox and its label
 # Used in: clickSubmitButton
@@ -148,6 +151,9 @@ SELECT_DROPDOWN = ["select.fb-dash-form-element__select-dropdown"]
 # Dropdown <option> child elements
 # Used in: handleAdditionalQuestions, handleWorkExperience
 SELECT_OPTION = ["option"]
+
+# Labels associated with dynamically identified form fields.
+FORM_FIELD_LABEL = ["label[for='{id}']"]
 
 # --- Radio Button Fieldsets ---
 
@@ -328,6 +334,8 @@ SEND_INVITATION_BUTTON = [
 # These run in the browser via document.querySelector / querySelectorAll
 JS_PROFILE_ACTION_SCOPE = ["main h1"]
 JS_PROFILE_ACTION_CANDIDATES = ["button", "[role=\"button\"]", "a"]
+JS_MAIN_FALLBACK = ["main"]
+JS_LIST_EXCLUSION = ["ul", "li"]
 JS_CONNECT_MENU_CANDIDATES = ["[role=\"menuitem\"]", "div[role=\"button\"]"]
 JS_MORE_GLOBAL_CANDIDATES = ["main button", "main [role=\"button\"]"]
 JS_SIDEBAR_EXCLUSION = ["aside", ".right-rail", ".scaffold-layout__aside"]

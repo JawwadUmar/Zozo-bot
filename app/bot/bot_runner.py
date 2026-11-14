@@ -11,13 +11,16 @@ from app.bot.daily_limit import DailySubmissionLimitReached, stop_if_daily_submi
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from app.bot.connect_hiring_team import _get_current_job_context
 from app.config.excluded_job import isExcludedJob
+from app.config.selectors import DISMISS_MODAL_BUTTON, JOB_CARD_CONTAINER, JOB_CARD_APPLIED_INDICATOR
+from app.utils.locator import get_first_available_locator
 
 
 async def close_success_modal(page):
     print("Zozo: Closing success modal...")
     try:
-        dismiss_btn = page.locator("button[data-test-modal-close-btn]:visible, button[aria-label='Dismiss']:visible, button.artdeco-modal__dismiss:visible, button:has(svg[data-test-icon='close-medium']):visible").first
-        await dismiss_btn.wait_for(state="visible", timeout=5000)
+        dismiss_btn = await get_first_available_locator(page, DISMISS_MODAL_BUTTON, timeout=5000)
+        if dismiss_btn is None:
+            return
         await dismiss_btn.click(force=True)
         await human_delay(1, 2)
     except Exception as e:
@@ -63,7 +66,9 @@ async def run_bot():
             
             # Check if we are on a search page with multiple job cards
             try:
-                await page.wait_for_selector(".job-card-container", timeout=5000)
+                card_locator = await get_first_available_locator(page, JOB_CARD_CONTAINER, timeout=5000)
+                if card_locator is None:
+                    raise TimeoutError("Job cards not found")
                 is_search_page = True
             except Exception:
                 is_search_page = False
@@ -76,14 +81,14 @@ async def run_bot():
                     await stop_for_daily_limit(context, e)
                     return
 
-                job_cards = page.locator(".job-card-container")
+                job_cards = page.locator(JOB_CARD_CONTAINER[0])
                 count = await job_cards.count()
                 print(f"🤖 Zozo: Found {count} jobs on this page.")
                 
                 for i in range(count):
                     try:
                         # Re-evaluate the locator in case the DOM changed
-                        job_cards = page.locator(".job-card-container")
+                        job_cards = page.locator(JOB_CARD_CONTAINER[0])
                         card = job_cards.nth(i)
                         
                         # Wait for the specific card to be attached and visible
@@ -95,8 +100,8 @@ async def run_bot():
                         await human_delay(1, 2)
                         
                         # Check if already applied
-                        applied_text = card.locator("li:has-text('Applied')")
-                        if await applied_text.count() > 0:
+                        applied_text = await get_first_available_locator(card, JOB_CARD_APPLIED_INDICATOR, state="attached")
+                        if applied_text is not None:
                             print(f"🤖 Zozo: Skipping job {i+1} because it is already 'Applied'.")
                             continue
 
@@ -120,8 +125,9 @@ async def run_bot():
                             print("🤖 Zozo: Closing success modal...")
                             try:
                                 # Find the dismiss button by data attribute, aria-label, class, or its inner SVG icon
-                                dismiss_btn = page.locator("button[data-test-modal-close-btn]:visible, button[aria-label='Dismiss']:visible, button.artdeco-modal__dismiss:visible, button:has(svg[data-test-icon='close-medium']):visible").first
-                                await dismiss_btn.wait_for(state="visible", timeout=5000)
+                                dismiss_btn = await get_first_available_locator(page, DISMISS_MODAL_BUTTON, timeout=5000)
+                                if dismiss_btn is None:
+                                    raise TimeoutError("Dismiss button not found")
                                 await dismiss_btn.click(force=True)
                                 await human_delay(1, 2)
                             except Exception as e:

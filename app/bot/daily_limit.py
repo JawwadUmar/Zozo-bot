@@ -1,3 +1,6 @@
+from app.config.selectors import DAILY_LIMIT_BODY
+from app.utils.locator import get_first_available_locator
+
 DAILY_SUBMISSION_LIMIT_TEXT = (
     "We limit daily submissions to maintain quality and prevent bots"
 )
@@ -9,7 +12,10 @@ class DailySubmissionLimitReached(Exception):
 
 async def is_daily_submission_limit_visible(page):
     try:
-        body_text = await page.locator("body").inner_text(timeout=1000)
+        body = await get_first_available_locator(page, DAILY_LIMIT_BODY, timeout=1000, state="attached")
+        if body is None:
+            return False
+        body_text = await body.inner_text(timeout=1000)
     except Exception:
         return False
 

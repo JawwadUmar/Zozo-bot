@@ -1,13 +1,15 @@
 from app.utils.human import human_delay
+from app.config.selectors import NEXT_OR_REVIEW_BUTTON, SUBMIT_APPLICATION_BUTTON, FOLLOW_COMPANY_CHECKBOX, FOLLOW_COMPANY_LABEL, REVIEW_APPLICATION_BUTTON, NEXT_STEP_BUTTON
+from app.utils.locator import get_first_available_locator
 # ================================Next or Review Button =======================================
 
 async def clickNextOrReviewButton(page):
     print("🤖 Zozo: Checking for 'Next' or 'Review' button...")
     try:
         # Use a comma-separated locator to find either the Next or Review button, whichever is visible
-        button = page.locator("button[aria-label='Continue to next step']:visible, button[aria-label='Review your application']:visible").first
-        
-        await button.wait_for(state="visible", timeout=3000)
+        button = await get_first_available_locator(page, NEXT_OR_REVIEW_BUTTON)
+        if button is None:
+            raise TimeoutError("Next or Review button not found")
         
         btn_text = await button.inner_text()
         await human_delay(1, 3)
@@ -23,21 +25,22 @@ async def clickSubmitButton(page):
     print("🤖 Zozo: Checking for 'Submit application' button...")
     try:
         # Locate the Submit application button by aria-label from the user's snippet
-        submit_button = page.locator("button[aria-label='Submit application']:visible").first
-        await submit_button.wait_for(state="visible", timeout=3000)
+        submit_button = await get_first_available_locator(page, SUBMIT_APPLICATION_BUTTON)
+        if submit_button is None:
+            raise TimeoutError("Submit button not found")
         
         # Uncheck "Follow company" if it exists and is checked
-        follow_checkbox = page.locator("input#follow-company-checkbox")
-        if await follow_checkbox.count() > 0 and await follow_checkbox.first.is_visible():
-            is_checked = await follow_checkbox.first.is_checked()
+        follow_checkbox = await get_first_available_locator(page, FOLLOW_COMPANY_CHECKBOX, state="attached")
+        if follow_checkbox is not None and await follow_checkbox.is_visible():
+            is_checked = await follow_checkbox.is_checked()
             if is_checked:
                 print("🤖 Zozo: Unchecking 'Follow company'...")
                 # Best practice is to click its label since the actual checkbox input may be hidden
-                follow_label = page.locator("label[for='follow-company-checkbox']").first
-                if await follow_label.count() > 0:
+                follow_label = await get_first_available_locator(page, FOLLOW_COMPANY_LABEL, state="attached")
+                if follow_label is not None:
                     await follow_label.click()
                 else:
-                    await follow_checkbox.first.click()
+                    await follow_checkbox.click()
                 await human_delay(0.5, 1.0)
                 
         await human_delay(1, 3)
@@ -55,9 +58,9 @@ async def clickReviewButton(page):
     print("🤖 Zozo: Checking for 'Review' button...")
     try:
         # Locate the button using the aria-label from the HTML snippet
-        review_button = page.locator("button[aria-label='Review your application']:visible").first
-        
-        await review_button.wait_for(state="visible", timeout=3000)
+        review_button = await get_first_available_locator(page, REVIEW_APPLICATION_BUTTON)
+        if review_button is None:
+            raise TimeoutError("Review button not found")
         
         await human_delay(1, 3)
         await review_button.click()
@@ -72,9 +75,9 @@ async def clickNextButton(page):
     print("🤖 Zozo: Checking for 'Next' button...")
     try:
         # Locate the button using the aria-label from the HTML snippet
-        next_button = page.locator("button[aria-label='Continue to next step']:visible").first
-        
-        await next_button.wait_for(state="visible", timeout=3000)
+        next_button = await get_first_available_locator(page, NEXT_STEP_BUTTON)
+        if next_button is None:
+            raise TimeoutError("Next button not found")
         
         await human_delay(1, 3)
         await next_button.click()

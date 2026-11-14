@@ -1,14 +1,17 @@
 
 from app.utils.human import human_delay
 from app.bot.daily_limit import DailySubmissionLimitReached, stop_if_daily_submission_limit_visible
+from app.config.selectors import EASY_APPLY_BUTTON, CONTINUE_APPLYING_BUTTON
+from app.utils.locator import get_first_available_locator
 
 async def clickEasyApply(page):
     await stop_if_daily_submission_limit_visible(page)
 
     try:
         # We use the class .jobs-apply-button and filter by visible to ensure we target the right one
-        apply_button = page.locator(".jobs-apply-button:visible").first
-        await apply_button.wait_for(state="visible", timeout=15000)
+        apply_button = await get_first_available_locator(page, EASY_APPLY_BUTTON, timeout=15000)
+        if apply_button is None:
+            raise TimeoutError("Easy Apply button not found")
         
         # Add a slight delay before clicking to act human
         await human_delay(1, 3)
@@ -26,13 +29,12 @@ async def clickEasyApply(page):
     # Wait to see if the "Continue applying" warning modal pops up
     try:
         # Use a short timeout because this modal won't always appear
-        continue_button = page.get_by_role("button", name="Continue applying").locator("visible=true").first
-        await continue_button.wait_for(state="visible", timeout=3000)
-        
-        await human_delay(1, 2)
-        await continue_button.click()
-        print("✅ Zozo: Clicked 'Continue applying'!")
-        await stop_if_daily_submission_limit_visible(page)
+        continue_button = await get_first_available_locator(page, CONTINUE_APPLYING_BUTTON)
+        if continue_button is not None:
+            await human_delay(1, 2)
+            await continue_button.click()
+            print("✅ Zozo: Clicked 'Continue applying'!")
+            await stop_if_daily_submission_limit_visible(page)
     except DailySubmissionLimitReached:
         raise
     except Exception:

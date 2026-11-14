@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 # Internal helper
 # ---------------------------------------------------------------------------
 
-def _make_locator(page: "Page", selector: str) -> "Locator":
+def _make_locator(page: "Page | Locator", selector: str) -> "Locator":
     """Convert a single selector string into a Playwright Locator.
 
     Supported formats
@@ -77,7 +77,7 @@ def _make_locator(page: "Page", selector: str) -> "Locator":
 # ---------------------------------------------------------------------------
 
 async def get_first_available_locator(
-    page: "Page",
+    page: "Page | Locator",
     selectors: list[str],
     *,
     timeout: int = 3000,

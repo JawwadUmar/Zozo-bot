@@ -1,6 +1,8 @@
 from playwright.async_api import Page
 from app.config.config import EMAIL, PASSWORD
 from app.utils.human import human_delay, human_mouse_move,human_typing
+from app.config.selectors import LOGIN_EMAIL_INPUT, LOGIN_PASSWORD_INPUT, LOGIN_SUBMIT_BUTTON, LOGIN_SUCCESS_URL_PATTERN
+from app.utils.locator import get_first_available_locator
 
 async def handleLogin(page: Page):
     await page.goto("https://www.linkedin.com/login/")
@@ -13,9 +15,9 @@ async def handleLogin(page: Page):
         return
 
     # Selectors
-    username = page.get_by_label("Email or phone", exact=True).locator("visible=true").first
-    password = page.get_by_label("Password", exact=True).locator("visible=true").first
-    submitButton = page.get_by_role("button", name="Sign in", exact=True).locator("visible=true").first
+    username = await get_first_available_locator(page, LOGIN_EMAIL_INPUT)
+    password = await get_first_available_locator(page, LOGIN_PASSWORD_INPUT)
+    submitButton = await get_first_available_locator(page, LOGIN_SUBMIT_BUTTON)
 
     await username.click()
     await human_typing(username, EMAIL)
@@ -27,7 +29,7 @@ async def handleLogin(page: Page):
     print("🤖 Zozo: Waiting for login to complete (please solve 2FA if prompted)...")
     try:
         # Wait up to 2 minutes for the URL to change to the LinkedIn feed, confirming login is successful
-        await page.wait_for_url("**/feed/**", timeout=120000)
+        await page.wait_for_url(LOGIN_SUCCESS_URL_PATTERN[0], timeout=120000)
         print("✅ Zozo: Login confirmed!")
     except Exception as e:
         print("⚠️ Zozo: Login timed out or failed. Check the browser.")
