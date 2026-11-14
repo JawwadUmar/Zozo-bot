@@ -106,26 +106,27 @@ DAILY_LIMIT_BODY = ["body"]
 
 # "Contact info" section header
 # Used in: fillForm step-2 check, handleContactInfo
-CONTACT_INFO_HEADER = ["h3:has-text('Contact info'):visible", "h3:has-text('Contact info')"]
+CONTACT_INFO_HEADER = ["p:text-is('Contact info'):visible","h3:has-text('Contact info'):visible", "h3:has-text('Contact info')"]
 
 # "Be sure to include an updated resume" indicator
 # Used in: fillForm step-3 check, handleResumePage
 RESUME_SECTION_TEXT = [
+    "p:text-is('Resume*'):visible",
     "span:has-text('Be sure to include an updated resume'):visible",
     "span:has-text('Be sure to include an updated resume')",
 ]
 
 # "Additional Questions" section header
 # Used in: fillForm step-4 check, handleAdditionalQuestions
-ADDITIONAL_QUESTIONS_HEADER = ["h3:has-text('Additional Questions'):visible", "h3:has-text('Additional Questions')"]
+ADDITIONAL_QUESTIONS_HEADER = ["p:text-is('Additional Questions'):visible","h3:has-text('Additional Questions'):visible", "h3:has-text('Additional Questions')"]
 
 # "Work authorization" section header
 # Used in: fillForm step-5 check, handleWorkAuthorization
-WORK_AUTHORIZATION_HEADER = ["h3:has-text('Work authorization'):visible", "h3:has-text('Work authorization')"]
+WORK_AUTHORIZATION_HEADER = ["p:text-is('Work authorization'):visible","h3:has-text('Work authorization'):visible", "h3:has-text('Work authorization')"]
 
 # "Work experience" section header
 # Used in: fillForm step-6 check, handleWorkExperience
-WORK_EXPERIENCE_HEADER = ["h3:has-text('Work experience'):visible", "h3:has-text('Work experience')"]
+WORK_EXPERIENCE_HEADER = ["p:text-is('Work experience'):visible","h3:has-text('Work experience'):visible", "h3:has-text('Work experience')"]
 
 # --- Form Input Fields ---
 
