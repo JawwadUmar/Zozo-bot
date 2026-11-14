@@ -1,4 +1,7 @@
 from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def init_llm()->ChatGroq|None:
     try:    
