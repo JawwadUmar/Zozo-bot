@@ -5,19 +5,22 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langchain.agents import create_agent
 
-from app.ai.llm import llm
+from app.agent.llm import llm
 
 
 ALLOWED_TOOLS = {
     "browser_navigate",
     "browser_snapshot",
+    "browser_find",
     "browser_click",
     "browser_type",
+    "browser_fill_form",
     "browser_scroll",
     "browser_file_upload",
     "browser_press_key",
     "browser_wait_for",
     "browser_select_option",
+    "browser_tabs",
 }
 
 
@@ -60,6 +63,10 @@ async def main():
         # Load tools using the existing persistent session.
         all_tools = await load_mcp_tools(session)
 
+        with open("toolList.txt", "w") as file:
+            for item in all_tools:
+                file.write(f"{item}\n")
+
         # Filter tools.
         tools = filter_playwright_tools(all_tools)
 
@@ -77,15 +84,15 @@ async def main():
         Use only the available browser tools.
         """
 
-        response = await agent.ainvoke({
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        })
+        # response = await agent.ainvoke({
+        #     "messages": [
+        #         {"role": "user", "content": prompt}
+        #     ]
+        # })
 
-        print("\nAgent response:")
-        for message in response["messages"]:
-            print(message)
+        # print("\nAgent response:")
+        # for message in response["messages"]:
+        #     print(message)
 
     # MCP session closes here, after the agent finishes.
 

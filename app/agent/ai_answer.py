@@ -2,7 +2,7 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from typing import Any
 from app.utils.file_loader import get_resume, get_system_prompt, get_human_prompt
-from app.ai.llm import llm
+from app.agent.llm import llm
 
 resume = get_resume()
 system_prompt = get_system_prompt()

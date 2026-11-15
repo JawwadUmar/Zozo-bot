@@ -2,7 +2,7 @@ from app.utils.human import human_delay, human_typing
 from app.config.config import PHONE_NUMBER
 from app.bot.click_buttons import clickNextOrReviewButton, clickSubmitButton, clickNextButton
 from app.bot.daily_limit import stop_if_daily_submission_limit_visible
-from app.ai.ai_answer import getAiAnswer
+from app.agent import getAiAnswer
 from app.config.selectors import (
     SUBMIT_APPLICATION_BUTTON, CONTACT_INFO_HEADER, PHONE_NUMBER_INPUT, RESUME_SECTION_TEXT,
     ADDITIONAL_QUESTIONS_HEADER, WORK_AUTHORIZATION_HEADER, WORK_EXPERIENCE_HEADER,
