@@ -19,8 +19,8 @@ CONNECTION_NOTE_TEMPLATE = os.getenv(
     "Hi {name}, I applied for the {job_title} role at {company}. I would be glad to connect and follow updates from your hiring team."
 )
 
-if not EMAIL or not PASSWORD or not JOBLINK:
-    raise ValueError("Credentials missing in .env")
+if not EMAIL or not PASSWORD:
+    raise ValueError("LinkedIn credentials missing in .env")
 
 
 PROJECT_ROOT = os.path.abspath( os.path.join(os.path.dirname(__file__), "../../") )

@@ -4,6 +4,21 @@ class ApplicationState(TypedDict):
     # Browser reference
     session_id: str
 
+    # Pagination & Page State
+    job_link: str
+    start: int
+    is_search_page: bool
+    total_cards_on_page: int
+    current_card_index: int
+
+    # Current Job Context
+    current_job_title: Optional[str]
+    current_company: Optional[str]
+    applied_count: int
+
+    # Control Flags
+    daily_limit_reached: bool
+
     # Application data
     user_profile: dict
     resume_path: str

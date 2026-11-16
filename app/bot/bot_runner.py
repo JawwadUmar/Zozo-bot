@@ -42,6 +42,9 @@ async def stop_for_daily_limit(browser, error):
 
 
 async def run_bot():
+    if not JOBLINK:
+        raise ValueError("LINKEDIN_JOB_LINK is required to run the legacy bot runner.")
+
     async with async_playwright() as p:
         context: BrowserContext = await p.chromium.launch_persistent_context(user_data_dir = USER_DATA_DIRECTORY, headless=False)
         page = await context.new_page()
