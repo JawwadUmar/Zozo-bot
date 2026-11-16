@@ -1,6 +1,4 @@
-
-# app/agent/nodes/browser.py
-
+from contextlib import suppress
 from uuid import uuid4
 from playwright.async_api import async_playwright
 
@@ -9,30 +7,26 @@ from app.agent.state import ApplicationState
 from app.config.session_manager import browser_manager
 
 
-async def initialize_browser(state: ApplicationState):
+async def initialize_browser(_state: ApplicationState) -> dict[str, str]:
+    """Start a persistent Chromium context and register its live handles.
 
+    Playwright objects stay in the process-local session manager; only the
+    serializable session ID is returned to LangGraph state.
+    """
     session_id = str(uuid4())
-
-    # Start Playwright without an async context manager.
     playwright = await async_playwright().start()
+    context = None
 
     try:
-        # Launch persistent browser context.
         context = await playwright.chromium.launch_persistent_context(
             user_data_dir=USER_DATA_DIRECTORY,
             headless=False
         )
 
-        # Persistent context may already contain an open page.
-        pages = context.pages
+        # A persistent context may start with a page already open.
+        page = context.pages[0] if context.pages else await context.new_page()
 
-        if pages:
-            page = pages[0]
-        else:
-            page = await context.new_page()
-
-        # Register live objects outside LangGraph state.
-        await browser_manager.register(
+        browser_manager.register(
             session_id=session_id,
             playwright=playwright,
             context=context,
@@ -45,5 +39,11 @@ async def initialize_browser(state: ApplicationState):
         }
 
     except Exception:
-        await playwright.stop()
+        # Clean up partially initialized resources before propagating the
+        # error so LangGraph can apply its normal retry/error policy.
+        if context is not None:
+            with suppress(Exception):
+                await context.close()
+        with suppress(Exception):
+            await playwright.stop()
         raise
