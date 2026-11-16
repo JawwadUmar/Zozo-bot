@@ -7,7 +7,7 @@ class ApplicationState(TypedDict):
     # Application data
     user_profile: dict
     resume_path: str
-
+    is_logged_in: bool
     search_query: str
     jobs: list
     current_job: dict
