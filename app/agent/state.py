@@ -7,9 +7,14 @@ class ApplicationState(TypedDict):
     # Pagination & Page State
     job_link: str
     start: int
+    current_page: int
     is_search_page: bool
     total_cards_on_page: int
     current_card_index: int
+    current_page_jobs: list[dict[str, Any]]
+    processed_jobs: list[dict[str, Any]]
+    should_apply: bool
+    has_next_page: bool
 
     # Current Job Context
     current_job_title: Optional[str]

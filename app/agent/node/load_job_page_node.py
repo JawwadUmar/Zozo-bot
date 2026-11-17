@@ -7,7 +7,6 @@ from app.config.selectors import JOB_CARD_CONTAINER
 from app.config.session_manager import browser_manager
 from app.utils.human import human_delay
 from app.utils.locator import get_first_available_locator
-from app.config.config import JOBLINK
 
 
 def _validate_job_link(job_link: str) -> str:
@@ -48,7 +47,7 @@ async def load_jobs_page(state: ApplicationState) -> dict[str, object]:
         }
 
     try:
-        job_link = _validate_job_link(state.get("job_link", JOBLINK))
+        job_link = _validate_job_link(state.get("job_link", ""))
         start = state.get("start", 0)
         if not isinstance(start, int) or start < 0:
             raise ValueError("start must be a non-negative integer.")
@@ -61,12 +60,24 @@ async def load_jobs_page(state: ApplicationState) -> dict[str, object]:
 
         is_search_page = "/jobs/search" in urlparse(target_url).path
         total_cards = 0
+        matched_selector = None
         if is_search_page:
             card_locator = await get_first_available_locator(
                 page, JOB_CARD_CONTAINER, timeout=10_000
             )
+
             if card_locator is not None:
-                total_cards = await page.locator(JOB_CARD_CONTAINER[0]).count()
+                # The helper returns only the first match (an OR locator
+                # followed by .first), so count with the underlying selector.
+                for selector in JOB_CARD_CONTAINER:
+                    visible_cards = page.locator(f"{selector}:visible")
+                    total_cards = await visible_cards.count()
+                    if total_cards:
+                        matched_selector = selector
+                        break
+
+            print(f"First matching job-card selector: {matched_selector!r}")
+            print(f"Zozo: Found {total_cards} visible job cards on this page.")
 
         return {
             "is_search_page": is_search_page,

@@ -33,7 +33,12 @@ LOGIN_SUCCESS_URL_PATTERN = ["**/feed/**"]
 
 # CSS selector for job cards in search results list
 # Used in: wait_for_selector and page.locator calls in run_bot
-JOB_CARD_CONTAINER = [".job-card-container"]
+JOB_CARD_SELECTOR = 'div[role="button"][componentkey^="job-card-component-ref-"]'
+JOB_CARD_CONTAINER = [".job-card-container", JOB_CARD_SELECTOR]
+
+# Pagination controls found in job_page.html
+JOB_NEXT_PAGE_BUTTON = 'button[data-testid="pagination-controls-next-button-visible"]'
+JOB_CURRENT_PAGE_BUTTON = 'ul[data-testid="pagination-controls-list"] button[aria-current="true"]'
 
 # Text selector to detect "Already Applied" status on a job card
 # Used in: run_bot — card.locator(...)
