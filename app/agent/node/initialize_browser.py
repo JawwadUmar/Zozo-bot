@@ -1,4 +1,3 @@
-from contextlib import suppress
 from uuid import uuid4
 from playwright.async_api import async_playwright
 
@@ -39,11 +38,10 @@ async def initialize_browser(_state: ApplicationState) -> dict[str, str]:
         }
 
     except Exception:
-        # Clean up partially initialized resources before propagating the
-        # error so LangGraph can apply its normal retry/error policy.
-        if context is not None:
-            with suppress(Exception):
-                await context.close()
-        with suppress(Exception):
-            await playwright.stop()
+        # Preserve any browser that was created for human inspection.
+        if context is not None and session_id not in browser_manager.sessions:
+            browser_manager.sessions[session_id] = {
+                "playwright": playwright, "context": context,
+                "page": context.pages[0] if context.pages else None,
+            }
         raise

@@ -1,5 +1,7 @@
 from langgraph.graph import END, START, StateGraph
 
+from app.agent.node.wait_for_human_input_node import wait_for_human_input_node
+
 from app.agent.node.handle_login_node import handle_login
 from app.agent.node.initialize_browser import initialize_browser
 from app.agent.node.load_job_page_node import load_jobs_page
@@ -36,66 +38,60 @@ def _route_after_pagination(state: ApplicationState) -> str:
     return "extract" if state.get("has_next_page") else "end"
 
 
+def _guard_node(name, node):
+    async def guarded(state):
+        try:
+            result = await node(state)
+            status = str(result.get("action_status", ""))
+            if status.endswith("_failed") or result.get("error"):
+                return {**result, "failed_node": name,
+                        "error": result.get("error") or f"{name} failed: {status}"}
+            return result
+        except Exception as exc:
+            return {"action_status": "node_failed", "failed_node": name,
+                    "error": f"{type(exc).__name__}: {exc}"}
+    return guarded
+
+
+def _route(route):
+    def guarded_route(state):
+        return "checkpoint" if state.get("failed_node") else route(state)
+    return guarded_route
+
+
 builder = StateGraph(ApplicationState)
-builder.add_node("initialize_browser", initialize_browser)
-builder.add_node("handle_login", handle_login)
-builder.add_node("load_jobs_page", load_jobs_page)
-builder.add_node("extract_jobs_node", extract_jobs_node)
-builder.add_node("should_apply_node", should_apply_node)
-builder.add_node("click_job_node", click_job_node)
-builder.add_node("advance_job_node", advance_job_node)
-builder.add_node("next_page_node", next_page_node)
-builder.add_node("click_easy_apply_node", click_easy_apply_node)
-builder.add_node("inspect_contact_info_node", inspect_contact_info_node)
-builder.add_node("fill_contact_info_node", fill_contact_info_node)
-builder.add_node("click_next_node", click_next_node)
-
-
+nodes = {
+    "initialize_browser": initialize_browser, "handle_login": handle_login,
+    "load_jobs_page": load_jobs_page, "extract_jobs_node": extract_jobs_node,
+    "should_apply_node": should_apply_node, "click_job_node": click_job_node,
+    "advance_job_node": advance_job_node, "next_page_node": next_page_node,
+    "click_easy_apply_node": click_easy_apply_node,
+    "inspect_contact_info_node": inspect_contact_info_node,
+    "fill_contact_info_node": fill_contact_info_node, "click_next_node": click_next_node,
+}
+for name, node in nodes.items():
+    builder.add_node(name, _guard_node(name, node))
+builder.add_node("wait_for_human_input_node", wait_for_human_input_node)
 builder.add_edge(START, "initialize_browser")
-builder.add_edge("initialize_browser", "handle_login")
-builder.add_conditional_edges(
-    "handle_login",
-    lambda state: "load_jobs_page" if state.get("is_logged_in") else "end",
-    {"load_jobs_page": "load_jobs_page", "end": END},
-)
-builder.add_edge("load_jobs_page", "extract_jobs_node")
-builder.add_conditional_edges(
-    "extract_jobs_node",
-    _route_after_extract,
-    {"evaluate": "should_apply_node", "paginate": "next_page_node", "end": END},
-)
-builder.add_conditional_edges(
-    "should_apply_node",
-    _route_after_evaluation,
-    {"click": "click_job_node", "advance": "advance_job_node"},
-)
-builder.add_conditional_edges(
-    "click_job_node", lambda state: "apply" if state.get("action_status") == "job_selected" else "advance",
-    {"apply": "click_easy_apply_node", "advance": "advance_job_node"},
-)
-builder.add_conditional_edges(
-    "click_easy_apply_node", lambda state: "inspect" if state.get("action_status") == "easy_apply_opened" else "end",
-    {"inspect": "inspect_contact_info_node", "end": END},
-)
-builder.add_conditional_edges(
-    "inspect_contact_info_node", lambda state: "fill" if state.get("action_status") == "contact_info_inspected" else "end",
-    {"fill": "fill_contact_info_node", "end": END},
-)
-builder.add_conditional_edges(
-    "fill_contact_info_node", lambda state: "next" if state.get("action_status") == "contact_info_filled" else "end",
-    {"next": "click_next_node", "end": END},
-)
-builder.add_edge("click_next_node", END)
-builder.add_conditional_edges(
-    "advance_job_node",
-    _route_after_advance,
-    {"evaluate": "should_apply_node", "paginate": "next_page_node"},
-)
-builder.add_conditional_edges(
-    "next_page_node",
-    _route_after_pagination,
-    {"extract": "extract_jobs_node", "end": END},
-)
+
+
+def connect(name, route, destinations):
+    builder.add_conditional_edges(name, _route(route),
+                                  {**destinations, "checkpoint": "wait_for_human_input_node"})
+
+connect("initialize_browser", lambda s: "next", {"next": "handle_login"})
+connect("handle_login", lambda s: "next" if s.get("is_logged_in") else "checkpoint", {"next": "load_jobs_page"})
+connect("load_jobs_page", lambda s: "next", {"next": "extract_jobs_node"})
+connect("extract_jobs_node", _route_after_extract, {"evaluate": "should_apply_node", "paginate": "next_page_node", "end": "wait_for_human_input_node"})
+connect("should_apply_node", _route_after_evaluation, {"click": "click_job_node", "advance": "advance_job_node"})
+connect("click_job_node", lambda s: "next", {"next": "click_easy_apply_node"})
+connect("click_easy_apply_node", lambda s: "next", {"next": "inspect_contact_info_node"})
+connect("inspect_contact_info_node", lambda s: "next", {"next": "fill_contact_info_node"})
+connect("fill_contact_info_node", lambda s: "next", {"next": "click_next_node"})
+connect("click_next_node", lambda s: "checkpoint", {})
+connect("advance_job_node", _route_after_advance, {"evaluate": "should_apply_node", "paginate": "next_page_node"})
+connect("next_page_node", _route_after_pagination, {"extract": "extract_jobs_node", "end": "wait_for_human_input_node"})
+builder.add_edge("wait_for_human_input_node", END)
 
 graph = builder.compile()
 
@@ -141,28 +137,14 @@ if __name__ == "__main__":
             "error": None,
         }
 
-        final_state = dict(initial_state)
-        existing_sessions = set(browser_manager.sessions)
         try:
             final_state = await graph.ainvoke(initial_state)
         except Exception as exc:
-            final_state["action_status"] = "graph_failed"
-            final_state["error"] = str(exc)
-        finally:
-            session_ids_to_close = set(browser_manager.sessions) - existing_sessions
-            if final_state.get("session_id") and final_state["session_id"] not in existing_sessions:
-                session_ids_to_close.add(final_state["session_id"])
-            if session_ids_to_close and not final_state.get("session_id"):
-                final_state["session_id"] = next(iter(session_ids_to_close))
-
-            print("\nApplication State before browser shutdown:")
-            pprint(final_state, sort_dicts=False)
-
-            for session_id in session_ids_to_close:
-                try:
-                    await browser_manager.close(session_id)
-                except Exception as exc:
-                    print(f"Browser shutdown encountered an error: {exc}")
-            print("Application stopped.")
+            final_state = {**initial_state, "failed_node": "graph", "error": f"{type(exc).__name__}: {exc}"}
+            await wait_for_human_input_node(final_state)
+        print("\nWorkflow state:")
+        pprint(final_state, sort_dicts=False)
+        print("Browser session remains active. Stop this process when you are finished.")
+        await asyncio.Event().wait()
 
     asyncio.run(main())

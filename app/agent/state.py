@@ -46,3 +46,4 @@ class ApplicationState(TypedDict):
     action_status: str
     application_status: str
     error: Optional[str]
+    failed_node: Optional[str]
