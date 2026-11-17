@@ -28,8 +28,6 @@ async def click_job_node(state: ApplicationState) -> dict[str, object]:
         await human_delay(1, 2)
         job["selected"] = True
 
-        # TODO: invoke the future easy_apply node here. For now, continue to
-        # advance_job_node and inspect the next card.
         return {"current_job": job, "action_status": "job_selected"}
     except Exception as exc:
         job["selected"] = False

@@ -8,6 +8,10 @@ from app.agent.node.should_apply_node import should_apply_node
 from app.agent.node.click_job_node import click_job_node
 from app.agent.node.advance_job_node import advance_job_node
 from app.agent.node.next_page_node import next_page_node
+from app.agent.node.click_easy_apply_node import click_easy_apply_node
+from app.agent.node.inspect_contact_info_node import inspect_contact_info_node
+from app.agent.node.fill_contact_info_node import fill_contact_info_node
+from app.agent.node.click_next_node import click_next_node
 from app.agent.state import ApplicationState
 from app.config.config import JOBLINK
 
@@ -41,6 +45,10 @@ builder.add_node("should_apply_node", should_apply_node)
 builder.add_node("click_job_node", click_job_node)
 builder.add_node("advance_job_node", advance_job_node)
 builder.add_node("next_page_node", next_page_node)
+builder.add_node("click_easy_apply_node", click_easy_apply_node)
+builder.add_node("inspect_contact_info_node", inspect_contact_info_node)
+builder.add_node("fill_contact_info_node", fill_contact_info_node)
+builder.add_node("click_next_node", click_next_node)
 
 
 builder.add_edge(START, "initialize_browser")
@@ -61,7 +69,23 @@ builder.add_conditional_edges(
     _route_after_evaluation,
     {"click": "click_job_node", "advance": "advance_job_node"},
 )
-builder.add_edge("click_job_node", "advance_job_node")
+builder.add_conditional_edges(
+    "click_job_node", lambda state: "apply" if state.get("action_status") == "job_selected" else "advance",
+    {"apply": "click_easy_apply_node", "advance": "advance_job_node"},
+)
+builder.add_conditional_edges(
+    "click_easy_apply_node", lambda state: "inspect" if state.get("action_status") == "easy_apply_opened" else "end",
+    {"inspect": "inspect_contact_info_node", "end": END},
+)
+builder.add_conditional_edges(
+    "inspect_contact_info_node", lambda state: "fill" if state.get("action_status") == "contact_info_inspected" else "end",
+    {"fill": "fill_contact_info_node", "end": END},
+)
+builder.add_conditional_edges(
+    "fill_contact_info_node", lambda state: "next" if state.get("action_status") == "contact_info_filled" else "end",
+    {"next": "click_next_node", "end": END},
+)
+builder.add_edge("click_next_node", END)
 builder.add_conditional_edges(
     "advance_job_node",
     _route_after_advance,
@@ -108,6 +132,7 @@ if __name__ == "__main__":
             "current_job": {},
             "current_form_step": None,
             "form_fields": [],
+            "contact_info_fields": [],
             "application_answers": {},
             "recovery_request": None,
             "recovery_result": None,

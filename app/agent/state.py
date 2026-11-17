@@ -35,6 +35,7 @@ class ApplicationState(TypedDict):
     # Form data
     current_form_step: Optional[str]
     form_fields: list
+    contact_info_fields: list[dict[str, Any]]
     application_answers: dict
 
     # Recovery
