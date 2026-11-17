@@ -14,6 +14,10 @@ from app.agent.node.click_easy_apply_node import click_easy_apply_node
 from app.agent.node.inspect_contact_info_node import inspect_contact_info_node
 from app.agent.node.fill_contact_info_node import fill_contact_info_node
 from app.agent.node.click_next_node import click_next_node
+from app.agent.node.detect_application_section_node import detect_application_section_node
+from app.agent.node.handle_resume_section_node import handle_resume_section_node
+from app.agent.node.inspect_additional_questions_node import inspect_additional_questions_node
+from app.agent.node.handle_additional_questions_node import handle_additional_questions_node
 from app.agent.state import ApplicationState
 from app.config.config import JOBLINK
 
@@ -68,6 +72,10 @@ nodes = {
     "click_easy_apply_node": click_easy_apply_node,
     "inspect_contact_info_node": inspect_contact_info_node,
     "fill_contact_info_node": fill_contact_info_node, "click_next_node": click_next_node,
+    "detect_application_section_node": detect_application_section_node,
+    "handle_resume_section_node": handle_resume_section_node,
+    "inspect_additional_questions_node": inspect_additional_questions_node,
+    "handle_additional_questions_node": handle_additional_questions_node,
 }
 for name, node in nodes.items():
     builder.add_node(name, _guard_node(name, node))
@@ -88,7 +96,13 @@ connect("click_job_node", lambda s: "next", {"next": "click_easy_apply_node"})
 connect("click_easy_apply_node", lambda s: "next", {"next": "inspect_contact_info_node"})
 connect("inspect_contact_info_node", lambda s: "next", {"next": "fill_contact_info_node"})
 connect("fill_contact_info_node", lambda s: "next", {"next": "click_next_node"})
-connect("click_next_node", lambda s: "checkpoint", {})
+connect("click_next_node", lambda s: "detect", {"detect": "detect_application_section_node"})
+connect("detect_application_section_node", lambda s: s.get("current_form_step", "other"),
+        {"resume": "handle_resume_section_node", "additional_questions": "inspect_additional_questions_node",
+         "work_experience": "wait_for_human_input_node", "contact_info": "wait_for_human_input_node", "other": "wait_for_human_input_node"})
+connect("handle_resume_section_node", lambda s: "next", {"next": "click_next_node"})
+connect("inspect_additional_questions_node", lambda s: "fill", {"fill": "handle_additional_questions_node"})
+connect("handle_additional_questions_node", lambda s: "next", {"next": "click_next_node"})
 connect("advance_job_node", _route_after_advance, {"evaluate": "should_apply_node", "paginate": "next_page_node"})
 connect("next_page_node", _route_after_pagination, {"extract": "extract_jobs_node", "end": "wait_for_human_input_node"})
 builder.add_edge("wait_for_human_input_node", END)
